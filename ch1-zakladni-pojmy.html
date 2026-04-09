@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kapitola 1: Základní pojmy</title>
+    <style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f4f4f4;
+    color: #333;
+    padding: 20px;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.container {
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.exercise-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.exercise-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.exercise-description {
+    color: #555;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+/* Exercise 1: Drag & Drop */
+.drag-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.drag-section {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    background: #fafafa;
+    min-height: 80px;
+}
+
+.drag-section-title {
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.drag-source {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.drag-item {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: grab;
+    font-size: 13px;
+    user-select: none;
+    transition: background 0.15s;
+}
+
+.drag-item:hover {
+    background: #f0f0f0;
+}
+
+.drag-item.dragging {
+    opacity: 0.5;
+}
+
+.drop-target {
+    min-height: 60px;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: background 0.15s, border-color 0.15s;
+    margin-bottom: 8px;
+}
+
+.drop-target.drag-over,
+.drop-target.over {
+    background: #e8f0fe;
+    border-color: #0f6cbf;
+}
+
+.drop-target.filled {
+    border-style: solid;
+    border-color: #28a745;
+    background: #f0fff4;
+}
+
+/* Let pointer events fall through to the drop-target, not get stuck on child content */
+.target-content, .drop-item, .drop-item-text {
+    pointer-events: none;
+}
+
+.drop-target .drag-item {
+    background: #e8f4fd;
+    border-color: #0f6cbf;
+}
+
+/* Exercise 2: Graph quiz */
+.graph-container {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.graph-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    background: #fafafa;
+    transition: background 0.15s, border-color 0.15s;
+    min-width: 120px;
+}
+
+.graph-item:hover {
+    background: #f0f0f0;
+    border-color: #aaa;
+}
+
+.graph-item.selected {
+    background: #e8f0fe;
+    border-color: #0f6cbf;
+}
+
+.graph-item.correct {
+    background: #d4edda;
+    border-color: #28a745;
+}
+
+.graph-item.incorrect {
+    background: #f8d7da;
+    border-color: #dc3545;
+}
+
+.graph-label {
+    font-size: 13px;
+    color: #555;
+    margin-top: 8px;
+}
+
+/* Exercise 3: Venn */
+.venn-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.venn-svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.venn-region {
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.venn-info {
+    background: #e8f0fe;
+    border: 1px solid #c5d8f6;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 14px;
+    text-align: center;
+    min-width: 200px;
+    margin-top: 8px;
+    color: #333;
+    display: block;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.venn-info.show {
+    opacity: 1;
+    background: #e8f0fe;
+    border-color: #0f6cbf;
+}
+
+/* Buttons */
+.btn {
+    background: #0f6cbf;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.4;
+}
+
+.btn:hover {
+    background: #0a5a9e;
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+button {
+    background: #0f6cbf;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+button:hover {
+    background: #0a5a9e;
+}
+
+/* Feedback */
+.feedback {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: none;
+}
+
+.feedback.show {
+    display: block;
+}
+
+.feedback.correct, .feedback-correct {
+    color: #155724;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.feedback.incorrect, .feedback-incorrect {
+    color: #721c24;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+.result {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #e8f0fe;
+    border: 1px solid #c5d8f6;
+    display: none;
+}
+
+.result.show {
+    display: block;
+}
+
+input[type="text"] {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #333;
+    width: 100%;
+}
+
+select {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #333;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #fafafa;
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+.quiz-option:hover {
+    background: #f0f0f0;
+}
+
+.quiz-option input[type="radio"] {
+    accent-color: #0f6cbf;
+}
+
+/* Buttons (named variants used in HTML) */
+.btn-check, .btn {
+    background: #0f6cbf;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+}
+.btn-check:hover, .btn:hover { background: #0a5a9e; }
+
+.btn-reset {
+    background: #6c757d;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+}
+.btn-reset:hover { background: #5a6268; }
+
+.button-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+/* Drag & drop zone (exercise 1) */
+.drag-drop-zone {
+    min-height: 50px;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    transition: background 0.15s, border-color 0.15s;
+    background: #fafafa;
+}
+
+.drag-drop-zone.drag-over {
+    background: #e8f0fe;
+    border-color: #0f6cbf;
+}
+
+.drop-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #e8f0fe;
+    border: 1px solid #c5d8f6;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+}
+
+.drop-item-text { font-family: monospace; }
+
+.remove-item {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 0 2px;
+    font-size: 14px;
+    line-height: 1;
+    pointer-events: auto; /* override the parent none */
+}
+.remove-item:hover { color: #dc3545; background: none; }
+
+.target-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 30px;
+}
+
+/* Quiz item (exercise 2) */
+.quiz-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #fff;
+}
+
+.quiz-question {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.quiz-feedback {
+    margin-top: 8px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: none;
+}
+.quiz-feedback.show { display: block; }
+.quiz-feedback.correct { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+.quiz-feedback.incorrect { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+
+/* Venn diagram (exercise 3) */
+.venn-svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.venn-region {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+.venn-region:hover { opacity: 0.85; }
+.venn-region.active { opacity: 1; }
+
+.venn-label {
+    font-size: 12px;
+    font-family: inherit;
+    fill: #333;
+    pointer-events: none;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kapitola 1: Základní pojmy</h1>
+
+        <!-- Exercise 1: Drag & Drop -->
+        <div class="exercise-card">
+            <h2 class="exercise-title">Cvičení 1: Množinové operace — přiřazování</h2>
+            <div class="exercise-description">
+                Máme množiny M = {1, 2, 3, 4} a N = {3, 4, 5, 6}. Přetáhněte operace do správných výsledků.
+            </div>
+
+            <div class="drag-container">
+                <div class="drag-section">
+                    <h3 class="drag-section-title">Operace</h3>
+                    <div class="drag-source" id="dragSource">
+                        <div class="drag-item" draggable="true" data-operation="intersection">M ∩ N</div>
+                        <div class="drag-item" draggable="true" data-operation="union">M ∪ N</div>
+                        <div class="drag-item" draggable="true" data-operation="difference">M \ N</div>
+                    </div>
+                </div>
+
+                <div class="drag-section">
+                    <h3 class="drag-section-title">Výsledky</h3>
+                    <div class="drag-drop-zone">
+                        <div class="drop-target" id="dropTarget1" data-expected="intersection">
+                            <div class="target-content">{3, 4}</div>
+                        </div>
+                        <div class="drop-target" id="dropTarget2" data-expected="union">
+                            <div class="target-content">{1, 2, 3, 4, 5, 6}</div>
+                        </div>
+                        <div class="drop-target" id="dropTarget3" data-expected="difference">
+                            <div class="target-content">{1, 2}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-check" onclick="checkExercise1()">Zkontrolovat</button>
+                <button class="btn btn-reset" onclick="resetExercise1()">Resetovat</button>
+            </div>
+
+            <div id="feedback1" class="feedback"></div>
+        </div>
+
+        <!-- Exercise 2: Quiz -->
+        <div class="exercise-card">
+            <h2 class="exercise-title">Cvičení 2: Grafy a stromy — kvíz</h2>
+            <div class="exercise-description">
+                Odpovězte na následující otázky o grafech a stromech.
+            </div>
+
+            <div id="quizContainer">
+                <div class="quiz-item" id="quizItem1">
+                    <div class="quiz-question">Hrany grafu jsou uspořádané dvojice (u, v), směr je důležitý.</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="directed">
+                            orientovaný
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="undirected">
+                            neorientovaný
+                        </label>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz-item" id="quizItem2">
+                    <div class="quiz-question">Mezi každými dvěma vrcholy existuje právě jedna cesta a neexistují cykly.</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="tree">
+                            strom
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="graph">
+                            obecný graf
+                        </label>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz-item" id="quizItem3">
+                    <div class="quiz-question">Hrana z vrcholu u do sebe samého (u, u).</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="loop">
+                            smyčka
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="bridge">
+                            most
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="path">
+                            cesta
+                        </label>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <div class="quiz-item" id="quizItem4">
+                    <div class="quiz-question">Počet hran směřujících do vrcholu v orientovaném grafu.</div>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="in-degree">
+                            vstupní stupeň
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="out-degree">
+                            výstupní stupeň
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="cardinality">
+                            kardinalita
+                        </label>
+                    </div>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-check" onclick="checkExercise2()">Zkontrolovat</button>
+                <button class="btn btn-reset" onclick="resetExercise2()">Resetovat</button>
+            </div>
+        </div>
+
+        <!-- Exercise 3: Venn Diagram -->
+        <div class="exercise-card">
+            <h2 class="exercise-title">Cvičení 3: Interaktivní Vennův diagram</h2>
+            <div class="exercise-description">
+                Klikněte na jednotlivé oblasti Vennova diagramu a podívejte se, které prvky tam patří.
+            </div>
+
+            <div class="venn-container">
+                <svg class="venn-svg" viewBox="0 0 500 300" width="500" height="300">
+                    <defs>
+                        <!-- Clip paths to cut the intersection area from each circle -->
+                        <clipPath id="clipLeft">
+                            <circle cx="180" cy="150" r="100"/>
+                        </clipPath>
+                        <clipPath id="clipRight">
+                            <circle cx="320" cy="150" r="100"/>
+                        </clipPath>
+                    </defs>
+
+                    <!-- Left circle (M) - semi-transparent blue -->
+                    <circle cx="180" cy="150" r="100" fill="#3498db" fill-opacity="0.25" stroke="#3498db" stroke-width="2.5"/>
+
+                    <!-- Right circle (N) - semi-transparent purple -->
+                    <circle cx="320" cy="150" r="100" fill="#9b59b6" fill-opacity="0.25" stroke="#9b59b6" stroke-width="2.5"/>
+
+                    <!-- Intersection lens - explicitly drawn with distinct teal color -->
+                    <!-- Intersection points: x=250, y=150±71.4 → (250, 78.6) and (250, 221.4) -->
+                    <path d="M 250 79 A 100 100 0 0 0 250 221 A 100 100 0 0 0 250 79 Z"
+                          fill="#1abc9c" fill-opacity="0.45" stroke="none"/>
+
+                    <!-- Clickable overlay: Only-M region (left part, excluding intersection) -->
+                    <circle cx="180" cy="150" r="100"
+                            fill="white" fill-opacity="0"
+                            stroke="none"
+                            clip-path="url(#clipLeft)"
+                            class="venn-region"
+                            onclick="showVennInfo('only-m')"
+                            style="cursor: pointer;"/>
+                    <!-- Mask the intersection from the above click area -->
+
+                    <!-- Simpler approach: use invisible rects as click zones -->
+                    <!-- Only-M: left half of left circle -->
+                    <ellipse cx="140" cy="150" rx="68" ry="90"
+                             fill="white" fill-opacity="0.01"
+                             class="venn-region"
+                             onclick="showVennInfo('only-m')"
+                             style="cursor: pointer;"/>
+
+                    <!-- Intersection: lens shape -->
+                    <path d="M 250 79 A 100 100 0 0 0 250 221 A 100 100 0 0 0 250 79 Z"
+                          fill="white" fill-opacity="0.01"
+                          class="venn-region"
+                          onclick="showVennInfo('intersection')"
+                          style="cursor: pointer;"/>
+
+                    <!-- Only-N: right half of right circle -->
+                    <ellipse cx="360" cy="150" rx="68" ry="90"
+                             fill="white" fill-opacity="0.01"
+                             class="venn-region"
+                             onclick="showVennInfo('only-n')"
+                             style="cursor: pointer;"/>
+
+                    <!-- Labels -->
+                    <text x="128" y="155" font-family="inherit" font-size="18" font-weight="700" fill="#2471a3" text-anchor="middle" dominant-baseline="middle">M</text>
+                    <text x="372" y="155" font-family="inherit" font-size="18" font-weight="700" fill="#7d3c98" text-anchor="middle" dominant-baseline="middle">N</text>
+
+                    <!-- Set element labels -->
+                    <text x="155" y="145" text-anchor="middle" font-size="13" fill="#1a5276">1, 2</text>
+                    <text x="250" y="150" text-anchor="middle" font-size="13" fill="#0e6655" font-weight="600">3, 4</text>
+                    <text x="345" y="145" text-anchor="middle" font-size="13" fill="#6c3483">5, 6</text>
+                </svg>
+            </div>
+
+            <div id="vennInfo" class="venn-info">
+                Klikněte na oblast diagramu pro zobrazení jejího obsahu.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Exercise 1: Drag & Drop Implementation
+        const dragState = {
+            draggedElement: null,
+            draggingData: null
+        };
+
+        document.querySelectorAll('.drag-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                dragState.draggedElement = item;
+                dragState.draggingData = item.getAttribute('data-operation');
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            item.addEventListener('dragend', () => {
+                item.classList.remove('dragging');
+                document.querySelectorAll('.drop-target').forEach(target => {
+                    target.classList.remove('over');
+                });
+            });
+        });
+
+        document.querySelectorAll('.drop-target').forEach(target => {
+            target.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                target.classList.add('over');
+            });
+
+            target.addEventListener('dragleave', () => {
+                target.classList.remove('over');
+            });
+
+            target.addEventListener('drop', (e) => {
+                e.preventDefault();
+                target.classList.remove('over');
+
+                if (dragState.draggedElement) {
+                    const operation = dragState.draggingData;
+                    const expected = target.getAttribute('data-expected');
+
+                    // Check if this is the correct target
+                    if (operation === expected) {
+                        target.classList.add('filled');
+                        target.innerHTML = `<div class="drop-item"><div class="drop-item-text">${dragState.draggedElement.textContent}</div><button class="remove-item" onclick="removeFromTarget(this)">×</button></div>`;
+                        dragState.draggedElement.style.display = 'none';
+                    }
+                }
+            });
+        });
+
+        function removeFromTarget(button) {
+            const target = button.closest('.drop-target');
+            const operation = target.getAttribute('data-expected');
+            const item = document.querySelector(`.drag-item[data-operation="${operation}"]`);
+
+            target.classList.remove('filled');
+            target.innerHTML = `<div class="target-content">${target.getAttribute('data-expected') === 'intersection' ? '{3, 4}' : target.getAttribute('data-expected') === 'union' ? '{1, 2, 3, 4, 5, 6}' : '{1, 2}'}</div>`;
+            item.style.display = 'block';
+        }
+
+        function checkExercise1() {
+            const target1 = document.getElementById('dropTarget1').classList.contains('filled');
+            const target2 = document.getElementById('dropTarget2').classList.contains('filled');
+            const target3 = document.getElementById('dropTarget3').classList.contains('filled');
+
+            const allFilled = target1 && target2 && target3;
+            const feedback = document.getElementById('feedback1');
+
+            if (allFilled) {
+                feedback.className = 'feedback show correct';
+                feedback.textContent = 'Výborně! Všechny operace jsou správně umístěny.';
+            } else {
+                feedback.className = 'feedback show incorrect';
+                feedback.textContent = 'Zkuste to znovu. Zkontrolujte, že jsou všechny operace správně přiřazeny.';
+            }
+        }
+
+        function resetExercise1() {
+            document.querySelectorAll('.drag-item').forEach(item => {
+                item.style.display = 'block';
+            });
+
+            document.querySelectorAll('.drop-target').forEach(target => {
+                target.classList.remove('filled');
+                const expected = target.getAttribute('data-expected');
+                if (expected === 'intersection') {
+                    target.innerHTML = '<div class="target-content">{3, 4}</div>';
+                } else if (expected === 'union') {
+                    target.innerHTML = '<div class="target-content">{1, 2, 3, 4, 5, 6}</div>';
+                } else {
+                    target.innerHTML = '<div class="target-content">{1, 2}</div>';
+                }
+            });
+
+            const feedback = document.getElementById('feedback1');
+            feedback.className = 'feedback';
+        }
+
+        // Exercise 2: Quiz Implementation
+        const quizAnswers = {
+            q1: 'directed',
+            q2: 'tree',
+            q3: 'loop',
+            q4: 'in-degree'
+        };
+
+        document.querySelectorAll('.quiz-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const radio = option.querySelector('input[type="radio"]');
+                const quizItem = option.closest('.quiz-item');
+                const allOptionsInItem = quizItem.querySelectorAll('.quiz-option');
+
+                allOptionsInItem.forEach(opt => {
+                    opt.classList.remove('selected', 'correct', 'incorrect');
+                    opt.querySelector('input[type="radio"]').checked = false;
+                });
+
+                option.classList.add('selected');
+                radio.checked = true;
+            });
+        });
+
+        function checkExercise2() {
+            let allCorrect = true;
+
+            document.querySelectorAll('.quiz-item').forEach((item, index) => {
+                const questionNum = `q${index + 1}`;
+                const selected = item.querySelector('input[type="radio"]:checked');
+                const feedback = item.querySelector('.quiz-feedback');
+
+                if (selected) {
+                    const isCorrect = selected.value === quizAnswers[questionNum];
+
+                    item.classList.remove('answered', 'correct', 'incorrect');
+                    item.classList.add('answered', isCorrect ? 'correct' : 'incorrect');
+
+                    item.querySelectorAll('.quiz-option').forEach(option => {
+                        option.classList.remove('correct', 'incorrect');
+                        const radio = option.querySelector('input[type="radio"]');
+                        if (radio.checked) {
+                            option.classList.add(isCorrect ? 'correct' : 'incorrect');
+                        }
+                    });
+
+                    feedback.textContent = isCorrect ? 'Správně!' : 'Nesprávně.';
+                    feedback.classList.add('show', isCorrect ? 'correct' : 'incorrect');
+
+                    if (!isCorrect) allCorrect = false;
+                } else {
+                    feedback.classList.remove('show');
+                }
+            });
+        }
+
+        function resetExercise2() {
+            document.querySelectorAll('.quiz-option').forEach(option => {
+                option.classList.remove('selected', 'correct', 'incorrect');
+                option.querySelector('input[type="radio"]').checked = false;
+            });
+
+            document.querySelectorAll('.quiz-item').forEach(item => {
+                item.classList.remove('answered', 'correct', 'incorrect');
+                item.querySelector('.quiz-feedback').classList.remove('show');
+            });
+        }
+
+        // Exercise 3: Venn Diagram
+        const vennData = {
+            'only-m': { label: 'Pouze M', elements: '{1, 2}' },
+            'intersection': { label: 'M ∩ N', elements: '{3, 4}' },
+            'only-n': { label: 'Pouze N', elements: '{5, 6}' }
+        };
+
+        function showVennInfo(region) {
+            const info = document.getElementById('vennInfo');
+            const data = vennData[region];
+            info.innerHTML = `<strong>${data.label}</strong> = ${data.elements}`;
+            info.classList.add('show');
+        }
+
+        // Iframe resizer
+        window.addEventListener('load', () => {
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'iframeResize', height: document.body.scrollHeight + 20 }, '*');
+            }
+        });
+
+        // ResizeObserver for dynamic height updates
+        const resizeObserver = new ResizeObserver(() => {
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'iframeResize', height: document.body.scrollHeight + 20 }, '*');
+            }
+        });
+
+        resizeObserver.observe(document.body);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kapitola 2: Konečné automaty - Cvičení</title>
+    <style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f4f4f4;
+    color: #333;
+    padding: 20px;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.container {
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.exercise {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.exercise h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+/* DFA */
+.dfa-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dfa-diagram {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 16px;
+    text-align: center;
+}
+
+svg {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+}
+
+.dfa-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.input-group label {
+    font-size: 13px;
+    color: #555;
+    white-space: nowrap;
+}
+
+input[type="text"] {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #333;
+    flex: 1;
+    min-width: 120px;
+}
+
+select {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #333;
+}
+
+button {
+    background: #0f6cbf;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+button:hover {
+    background: #0a5a9e;
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.result-display {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #e8f0fe;
+    border: 1px solid #c5d8f6;
+}
+
+.result-display.success {
+    background: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.result-display.error {
+    background: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+/* Trace display */
+.trace {
+    font-family: monospace;
+    font-size: 13px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.trace-step {
+    padding: 2px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.trace-step:last-child {
+    border-bottom: none;
+}
+
+/* Quiz options */
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #fafafa;
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+.quiz-option:hover {
+    background: #f0f0f0;
+}
+
+.quiz-option input[type="radio"] {
+    accent-color: #0f6cbf;
+}
+
+.quiz-option.correct {
+    background: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.quiz-option.incorrect {
+    background: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+/* Feedback */
+.feedback {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: none;
+}
+
+.feedback.show {
+    display: block;
+}
+
+.feedback.correct {
+    color: #155724;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.feedback.incorrect {
+    color: #721c24;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+/* Step display for determinization */
+.step-box {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    font-size: 13px;
+    font-family: monospace;
+    min-height: 60px;
+}
+
+.step-counter {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+/* State highlight in SVG */
+.state-active {
+    fill: #e8f0fe !important;
+    stroke: #0f6cbf !important;
+    stroke-width: 2 !important;
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 12px 0;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px 10px;
+    text-align: center;
+}
+
+table th {
+    background: #f4f4f4;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Button variants */
+.btn-primary {
+    background: #0f6cbf;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+}
+.btn-primary:hover { background: #0a5a9e; }
+
+.btn-success {
+    background: #28a745;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+}
+.btn-success:hover { background: #218838; }
+
+.buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+/* DFA tape display */
+.tape {
+    display: flex;
+    gap: 2px;
+    margin: 8px 0;
+    flex-wrap: wrap;
+}
+
+.tape span {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: monospace;
+    font-size: 14px;
+    border-radius: 3px;
+    background: #fff;
+    transition: background 0.2s;
+}
+
+.tape span.active {
+    background: #0f6cbf;
+    color: #fff;
+    border-color: #0f6cbf;
+}
+
+.tape span.done {
+    background: #e8f0fe;
+    color: #0f6cbf;
+}
+
+/* Verdict display */
+.verdict {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.verdict.accept {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.verdict.reject {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+/* Quiz (DKA vs NKA) */
+.quiz-questions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.question-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.question-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.option-btn {
+    padding: 7px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fafafa;
+    color: #333;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    text-align: left;
+    transition: background 0.15s;
+}
+.option-btn:hover { background: #f0f0f0; }
+.option-btn.correct { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+.option-btn.incorrect { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+.option-btn.disabled { pointer-events: none; }
+
+.quiz-summary {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #e8f0fe;
+    border: 1px solid #c5d8f6;
+    margin-top: 8px;
+}
+
+/* Stepper (determinization) */
+.stepper {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.step-title {
+    background: #f4f4f4;
+    border-bottom: 1px solid #ddd;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+}
+
+.step-content {
+    padding: 12px;
+}
+
+.step-body {
+    font-family: monospace;
+    font-size: 13px;
+    color: #333;
+    white-space: pre-wrap;
+}
+
+.stepper-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #fafafa;
+    border-top: 1px solid #ddd;
+}
+
+.stepper-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.dots {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ddd;
+    transition: background 0.2s;
+}
+
+.dots span.active { background: #0f6cbf; }
+.dots span.done { background: #28a745; }
+
+.pending {
+    color: #888;
+    font-style: italic;
+    font-size: 12px;
+}
+
+/* History (DFA trace) */
+.history {
+    font-family: monospace;
+    font-size: 12px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    max-height: 140px;
+    overflow-y: auto;
+    margin-top: 8px;
+}
+
+.history-entry {
+    padding: 2px 0;
+    border-bottom: 1px solid #f0f0f0;
+    color: #555;
+}
+.history-entry:last-child { border-bottom: none; }
+
+/* State highlight classes for SVG */
+.state-q0, .state-q1, .state-q2 {
+    transition: fill 0.2s;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kapitola 2: Konečné automaty - Cvičení</h1>
+
+        <!-- Exercise 4: DFA Simulator -->
+        <div class="exercise">
+            <h2>Cvičení 4: Simulátor DKA — krokování</h2>
+            <p style="margin-bottom: 15px; color: #666; font-size: 14px;">
+                DFA přijímá slova nad abecedou {a,b} obsahující podřetězec "ab".
+            </p>
+            <div class="dfa-container">
+                <div class="dfa-diagram">
+                    <svg width="400" height="200" viewBox="0 0 400 200">
+                        <!-- Q0 to Q1 arrow -->
+                        <path d="M 80 100 L 150 100" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                        <text x="115" y="90" font-size="12" text-anchor="middle">a</text>
+
+                        <!-- Q0 self-loop -->
+                        <path d="M 60 80 Q 40 40 60 20 Q 80 40 60 80" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                        <text x="35" y="45" font-size="12">b</text>
+
+                        <!-- Q1 to Q2 arrow -->
+                        <path d="M 190 100 L 280 100" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                        <text x="235" y="90" font-size="12" text-anchor="middle">b</text>
+
+                        <!-- Q1 self-loop -->
+                        <path d="M 170 80 Q 150 40 170 20 Q 190 40 170 80" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                        <text x="145" y="45" font-size="12">a</text>
+
+                        <!-- Q2 self-loop -->
+                        <path d="M 320 80 Q 340 40 320 20 Q 300 40 320 80" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                        <text x="345" y="45" font-size="12">a,b</text>
+
+                        <!-- Initial arrow to Q0 -->
+                        <path d="M 20 100 L 45 100" stroke="#333" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+                        <!-- States -->
+                        <circle cx="60" cy="100" r="25" stroke="#333" stroke-width="2" fill="white" class="state-q0"/>
+                        <text x="60" y="105" text-anchor="middle" font-size="14" font-weight="bold">q₀</text>
+
+                        <circle cx="170" cy="100" r="25" stroke="#333" stroke-width="2" fill="white" class="state-q1"/>
+                        <text x="170" y="105" text-anchor="middle" font-size="14" font-weight="bold">q₁</text>
+
+                        <circle cx="320" cy="100" r="25" stroke="#333" stroke-width="2" fill="white" class="state-q2"/>
+                        <circle cx="320" cy="100" r="20" stroke="#333" stroke-width="2" fill="none" class="state-q2"/>
+                        <text x="320" y="105" text-anchor="middle" font-size="14" font-weight="bold">q₂</text>
+
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#333"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+
+                <div class="dfa-controls">
+                    <div class="input-group">
+                        <label for="dfa-input">Vstupní slovo:</label>
+                        <input type="text" id="dfa-input" value="abba" placeholder="Zadejte slovo (jen a,b)">
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 8px;">Páska:</label>
+                        <div class="tape" id="dfa-tape"></div>
+                    </div>
+
+                    <div class="buttons">
+                        <button class="btn-primary" id="dfa-step">Další krok</button>
+                        <button class="btn-success" id="dfa-run-all">Spustit vše</button>
+                        <button class="btn-secondary" id="dfa-reset">Reset</button>
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Historie přechodů:</label>
+                        <div class="history" id="dfa-history"></div>
+                    </div>
+
+                    <div class="verdict pending" id="dfa-verdict">Připraveno k simulaci</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exercise 5: DFA vs NFA Classification -->
+        <div class="exercise">
+            <h2>Cvičení 5: DKA vs. NKA — klasifikace</h2>
+            <p style="margin-bottom: 15px; color: #666; font-size: 14px;">
+                Určete, zda se jedná o deterministický (DKA) nebo nedeterministický (NKA) automat.
+            </p>
+            <div class="quiz-questions" id="quiz2-container"></div>
+            <div class="quiz-summary" id="quiz2-summary" style="display: none; margin-top: 20px;"></div>
+        </div>
+
+        <!-- Exercise 6: NFA Determinization -->
+        <div class="exercise">
+            <h2>Cvičení 6: Determinizace NKA — krokování</h2>
+            <p style="margin-bottom: 15px; color: #666; font-size: 14px;">
+                Krokuje proces konverze nedeterministického automatu na deterministický pomocí konstrukce podmnožin.
+            </p>
+            <div class="stepper" id="stepper-container">
+                <div class="step-content">
+                    <div class="step-title" id="step-title">Krok 1: Počáteční stav DKA</div>
+                    <div class="step-body" id="step-body"></div>
+                </div>
+                <div class="stepper-controls">
+                    <div class="stepper-buttons">
+                        <button class="btn-secondary" id="step-prev">← Zpět</button>
+                        <button class="btn-primary" id="step-next">Dál →</button>
+                    </div>
+                    <div class="dots" id="step-dots"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exercise 7: Mealy vs Moore -->
+        <div class="exercise">
+            <h2>Cvičení 7: Mealyho vs. Moorův automat</h2>
+            <p style="margin-bottom: 15px; color: #666; font-size: 14px;">
+                Určete, zda se jedná o Mealyho nebo Moorův automat.
+            </p>
+            <div class="quiz-questions" id="quiz3-container"></div>
+            <div class="quiz-summary" id="quiz3-summary" style="display: none; margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== Exercise 4: DFA Simulator ====================
+        const dfaInput = document.getElementById('dfa-input');
+        const dfaTape = document.getElementById('dfa-tape');
+        const dfaHistory = document.getElementById('dfa-history');
+        const dfaVerdict = document.getElementById('dfa-verdict');
+        const dfaStepBtn = document.getElementById('dfa-step');
+        const dfaRunAllBtn = document.getElementById('dfa-run-all');
+        const dfaResetBtn = document.getElementById('dfa-reset');
+
+        const dfa = {
+            states: ['q0', 'q1', 'q2'],
+            alphabet: ['a', 'b'],
+            transitions: {
+                'q0:a': 'q1', 'q0:b': 'q0',
+                'q1:a': 'q1', 'q1:b': 'q2',
+                'q2:a': 'q2', 'q2:b': 'q2'
+            },
+            initial: 'q0',
+            accepting: ['q2']
+        };
+
+        let dfaState = {
+            word: '',
+            position: 0,
+            currentState: dfa.initial,
+            history: [],
+            finished: false
+        };
+
+        function initDFA() {
+            dfaInput.addEventListener('change', validateDFAInput);
+            dfaStepBtn.addEventListener('click', dfaStep);
+            dfaRunAllBtn.addEventListener('click', dfaRunAll);
+            dfaResetBtn.addEventListener('click', dfaReset);
+            dfaReset();
+        }
+
+        function validateDFAInput() {
+            const val = dfaInput.value.trim();
+            dfaInput.value = val.replace(/[^ab]/g, '').slice(0, 20);
+        }
+
+        function dfaReset() {
+            const word = dfaInput.value.trim();
+            dfaState = {
+                word: word || '',
+                position: 0,
+                currentState: dfa.initial,
+                history: [],
+                finished: false
+            };
+            updateDFADisplay();
+        }
+
+        function dfaStep() {
+            if (dfaState.finished) return;
+
+            if (dfaState.position < dfaState.word.length) {
+                const symbol = dfaState.word[dfaState.position];
+                const key = dfaState.currentState + ':' + symbol;
+                const nextState = dfa.transitions[key];
+
+                dfaState.history.push(`Krok ${dfaState.history.length + 1}: δ(${dfaState.currentState}, ${symbol}) = ${nextState}`);
+                dfaState.currentState = nextState;
+                dfaState.position++;
+            }
+
+            if (dfaState.position >= dfaState.word.length) {
+                dfaState.finished = true;
+                const accepted = dfa.accepting.includes(dfaState.currentState);
+                if (accepted) {
+                    dfaState.history.push(`Slovo přijato. Koncový stav: ${dfaState.currentState}`);
+                } else {
+                    dfaState.history.push(`Slovo zamítnuto. Koncový stav: ${dfaState.currentState}`);
+                }
+            }
+
+            updateDFADisplay();
+        }
+
+        function dfaRunAll() {
+            while (!dfaState.finished && dfaState.position < dfaState.word.length) {
+                dfaStep();
+            }
+        }
+
+        function updateDFADisplay() {
+            // Update tape
+            dfaTape.innerHTML = '';
+            if (dfaState.word.length === 0) {
+                const emptyTape = document.createElement('div');
+                emptyTape.style.color = '#999';
+                emptyTape.style.padding = '10px';
+                emptyTape.textContent = 'Zadejte slovo pro zobrazení pásky';
+                dfaTape.appendChild(emptyTape);
+            } else {
+                for (let i = 0; i < dfaState.word.length; i++) {
+                    const symbolDiv = document.createElement('span');
+                    if (i < dfaState.position) {
+                        symbolDiv.classList.add('done');
+                    }
+                    if (i === dfaState.position && !dfaState.finished) {
+                        symbolDiv.classList.add('active');
+                    }
+                    symbolDiv.textContent = dfaState.word[i];
+                    dfaTape.appendChild(symbolDiv);
+                }
+            }
+
+            // Update history
+            dfaHistory.innerHTML = dfaState.history.map(h => `<div class="history-entry">${h}</div>`).join('');
+            dfaHistory.scrollTop = dfaHistory.scrollHeight;
+
+            // Update verdict
+            if (dfaState.finished) {
+                const accepted = dfa.accepting.includes(dfaState.currentState);
+                dfaVerdict.className = 'verdict ' + (accepted ? 'accept' : 'reject');
+                dfaVerdict.textContent = accepted ? '✓ Slovo je přijato' : '✗ Slovo je zamítnuto';
+            } else {
+                dfaVerdict.className = 'verdict pending';
+                dfaVerdict.textContent = `Aktuální stav: ${dfaState.currentState}`;
+            }
+
+            dfaStepBtn.disabled = dfaState.finished;
+            dfaRunAllBtn.disabled = dfaState.finished;
+        }
+
+        initDFA();
+
+        // ==================== Exercise 5: DFA vs NFA Quiz ====================
+        const quiz2Data = [
+            {
+                question: 'δ(q₀, a) = q₁',
+                explanation: 'Pro každý stav a symbol existuje právě jeden přechod',
+                correct: 'DKA'
+            },
+            {
+                question: 'δ(q₀, a) = {q₁, q₂}',
+                explanation: 'Z jednoho stavu vede pro symbol více přechodů',
+                correct: 'NKA'
+            },
+            {
+                question: 'δ(q₁, ε) = {q₂}',
+                explanation: 'Přechod bez čtení symbolu (epsilon-přechod)',
+                correct: 'NKA'
+            },
+            {
+                question: 'δ: Q × Σ → P(Q)',
+                explanation: 'Přechodová funkce vrací množinu stavů',
+                correct: 'NKA'
+            },
+            {
+                question: 'δ: Q × Σ → Q',
+                explanation: 'Přechodová funkce vrací právě jeden stav',
+                correct: 'DKA'
+            },
+            {
+                question: 'Automat má více počátečních stavů I ⊆ Q',
+                explanation: 'Více počátečních stavů umožňují nedeterminismus',
+                correct: 'NKA'
+            }
+        ];
+
+        function initQuiz2() {
+            const container = document.getElementById('quiz2-container');
+            const summary = document.getElementById('quiz2-summary');
+            let answered = 0;
+            let correct = 0;
+
+            quiz2Data.forEach((q, i) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = 'quiz-question';
+                qDiv.innerHTML = `
+                    <div class="question-text">Otázka ${i + 1}: ${q.question}</div>
+                    <div class="question-options">
+                        <button class="option-btn" data-answer="DKA">DKA</button>
+                        <button class="option-btn" data-answer="NKA">NKA</button>
+                    </div>
+                    <div class="feedback"></div>
+                `;
+
+                const options = qDiv.querySelectorAll('.option-btn');
+                options.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (qDiv.querySelector('.feedback').textContent) return;
+
+                        const isCorrect = btn.dataset.answer === q.correct;
+                        const feedback = qDiv.querySelector('.feedback');
+
+                        if (isCorrect) {
+                            btn.classList.add('correct');
+                            feedback.className = 'feedback show correct';
+                            feedback.textContent = '✓ Správně: ' + q.explanation;
+                            correct++;
+                        } else {
+                            btn.classList.add('incorrect');
+                            options.forEach(b => {
+                                if (b.dataset.answer === q.correct) b.classList.add('correct');
+                            });
+                            feedback.className = 'feedback show incorrect';
+                            feedback.textContent = '✗ Chybně. Správná odpověď je ' + q.correct + ': ' + q.explanation;
+                        }
+
+                        options.forEach(b => b.disabled = true);
+                        answered++;
+
+                        if (answered === quiz2Data.length) {
+                            summary.innerHTML = `Výsledek: <strong>${correct}/${quiz2Data.length}</strong> správných odpovědí`;
+                            summary.style.display = 'block';
+                        }
+                    });
+                });
+
+                container.appendChild(qDiv);
+            });
+        }
+
+        initQuiz2();
+
+        // ==================== Exercise 6: Determinization Stepper ====================
+        const stepperData = [
+            {
+                title: 'Krok 1: Počáteční stav DKA',
+                body: 'Počátečním stavem DKA je množina obsahující počáteční stav NKA.\n\n{q₀}'
+            },
+            {
+                title: 'Krok 2: Přechody z {q₀}',
+                body: 'Z množiny {q₀} počítáme přechody:\n\nδ\'({q₀}, a) = {q₀, q₁}\nδ\'({q₀}, b) = ∅\n\nNový stav: {q₀, q₁}'
+            },
+            {
+                title: 'Krok 3: Přechody z {q₀, q₁}',
+                body: 'Z množiny {q₀, q₁} počítáme přechody:\n\nδ\'({q₀, q₁}, a) = {q₀, q₁}\nδ\'({q₀, q₁}, b) = {q₂}\n\nNový stav: {q₂}'
+            },
+            {
+                title: 'Krok 4: Přechody z {q₂}',
+                body: 'Z množiny {q₂} počítáme přechody:\n\nδ\'({q₂}, a) = ∅\nδ\'({q₂}, b) = ∅\n\nŽádné nové stavy.'
+            },
+            {
+                title: 'Krok 5: Výsledný DKA',
+                body: 'Vytvořili jsme DKA se stavy:\n\n{q₀}, {q₀, q₁}, {q₂}\n\nPřijímajícím stavem je {q₂}.'
+            }
+        ];
+
+        let currentStep = 0;
+
+        function initStepper() {
+            const prevBtn = document.getElementById('step-prev');
+            const nextBtn = document.getElementById('step-next');
+            const dotsContainer = document.getElementById('step-dots');
+
+            prevBtn.addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateStepper();
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentStep < stepperData.length - 1) {
+                    currentStep++;
+                    updateStepper();
+                }
+            });
+
+            // Create dots
+            for (let i = 0; i < stepperData.length; i++) {
+                const dot = document.createElement('span');
+                dot.classList.toggle('active', i === 0);
+                dot.addEventListener('click', () => {
+                    currentStep = i;
+                    updateStepper();
+                });
+                dotsContainer.appendChild(dot);
+            }
+
+            updateStepper();
+        }
+
+        function updateStepper() {
+            const step = stepperData[currentStep];
+            document.getElementById('step-title').textContent = step.title;
+            document.getElementById('step-body').textContent = step.body;
+
+            // Update dots
+            document.querySelectorAll('.dot').forEach((d, i) => {
+                d.classList.toggle('active', i === currentStep);
+            });
+
+            // Update buttons
+            document.getElementById('step-prev').disabled = currentStep === 0;
+            document.getElementById('step-next').disabled = currentStep === stepperData.length - 1;
+        }
+
+        initStepper();
+
+        // ==================== Exercise 7: Mealy vs Moore Quiz ====================
+        const quiz3Data = [
+            {
+                question: 'λ: Q × Σ → O',
+                explanation: 'Výstupní funkce závisí na aktuálním stavu a vstupním symbolu',
+                correct: 'Mealy'
+            },
+            {
+                question: 'λ: Q → O',
+                explanation: 'Výstupní funkce závisí výhradně na stavu',
+                correct: 'Moore'
+            },
+            {
+                question: 'Délka výstupního řetězce = délka vstupního řetězce',
+                explanation: 'Výstup se produkuje během každého přechodu',
+                correct: 'Mealy'
+            },
+            {
+                question: 'Délka výstupního řetězce = (délka vstupního) + 1',
+                explanation: 'Výstup se produkuje při vstupu do stavů, včetně počátečního',
+                correct: 'Moore'
+            },
+            {
+                question: 'Výstup se produkuje při vstupu do stavu',
+                explanation: 'Výstup je asociován se stavem',
+                correct: 'Moore'
+            },
+            {
+                question: 'Výstup se produkuje během přechodu',
+                explanation: 'Výstup je asociován se přechodem a vstupním symbolem',
+                correct: 'Mealy'
+            }
+        ];
+
+        function initQuiz3() {
+            const container = document.getElementById('quiz3-container');
+            const summary = document.getElementById('quiz3-summary');
+            let answered = 0;
+            let correct = 0;
+
+            quiz3Data.forEach((q, i) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = 'quiz-question';
+                qDiv.innerHTML = `
+                    <div class="question-text">Otázka ${i + 1}: ${q.question}</div>
+                    <div class="question-options">
+                        <button class="option-btn" data-answer="Mealy">Mealy</button>
+                        <button class="option-btn" data-answer="Moore">Moore</button>
+                    </div>
+                    <div class="feedback"></div>
+                `;
+
+                const options = qDiv.querySelectorAll('.option-btn');
+                options.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (qDiv.querySelector('.feedback').textContent) return;
+
+                        const isCorrect = btn.dataset.answer === q.correct;
+                        const feedback = qDiv.querySelector('.feedback');
+
+                        if (isCorrect) {
+                            btn.classList.add('correct');
+                            feedback.className = 'feedback show correct';
+                            feedback.textContent = '✓ Správně: ' + q.explanation;
+                            correct++;
+                        } else {
+                            btn.classList.add('incorrect');
+                            options.forEach(b => {
+                                if (b.dataset.answer === q.correct) b.classList.add('correct');
+                            });
+                            feedback.className = 'feedback show incorrect';
+                            feedback.textContent = '✗ Chybně. Správná odpověď je ' + q.correct + ': ' + q.explanation;
+                        }
+
+                        options.forEach(b => b.disabled = true);
+                        answered++;
+
+                        if (answered === quiz3Data.length) {
+                            summary.innerHTML = `Výsledek: <strong>${correct}/${quiz3Data.length}</strong> správných odpovědí`;
+                            summary.style.display = 'block';
+                        }
+                    });
+                });
+
+                container.appendChild(qDiv);
+            });
+        }
+
+        initQuiz3();
+
+        // ==================== Iframe Height Messaging ====================
+        function sendHeightMessage() {
+            const height = document.body.scrollHeight;
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'iframeResize',
+                    height: height
+                }, '*');
+            }
+        }
+
+        window.addEventListener('load', sendHeightMessage);
+        window.addEventListener('resize', sendHeightMessage);
+
+        const observer = new MutationObserver(sendHeightMessage);
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        setTimeout(sendHeightMessage, 500);
+    </script>
+</body>
+</html>

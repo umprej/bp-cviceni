@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kapitola 4: Převody a klasifikace</title>
+    <style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f4f4f4;
+    color: #333;
+    padding: 20px;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.container {
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.exercise {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: none;
+}
+
+.exercise h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Table exercise */
+.table-wrapper {
+    overflow-x: auto;
+    margin: 12px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px 10px;
+    text-align: center;
+}
+
+table th {
+    background: #f4f4f4;
+    font-weight: 600;
+    color: #333;
+}
+
+table td {
+    background: #fff;
+}
+
+table select {
+    padding: 4px 6px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: inherit;
+    color: #333;
+}
+
+/* Matching exercise */
+.match-container {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.match-column {
+    flex: 1;
+    min-width: 180px;
+}
+
+.match-column-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #eee;
+}
+
+.match-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    background: #fafafa;
+    font-size: 13px;
+    font-family: monospace;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.match-item:hover {
+    background: #f0f0f0;
+}
+
+.match-item.selected {
+    background: #e8f0fe;
+    border-color: #0f6cbf;
+}
+
+.match-item.matched {
+    background: #d4edda;
+    border-color: #c3e6cb;
+    cursor: default;
+}
+
+.match-item.wrong {
+    background: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+/* Grammar rules classification */
+.rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.rule-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fafafa;
+    font-size: 13px;
+    font-family: monospace;
+}
+
+.rule-item select {
+    margin-left: auto;
+    min-width: 120px;
+}
+
+/* Exercise 13 – question cards */
+.question {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.question.correct {
+    background: #f0fff4;
+    border-color: #c3e6cb;
+}
+
+.question.incorrect {
+    background: #fff5f5;
+    border-color: #f5c6cb;
+}
+
+.question-text {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.question-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.question-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.12s;
+}
+
+.question-option:hover {
+    background: #f0f0f0;
+}
+
+.question-option input[type="radio"] {
+    accent-color: #0f6cbf;
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.question.correct .question-option input[type="radio"]:checked + span {
+    color: #155724;
+    font-weight: 600;
+}
+
+.question.incorrect .question-option input[type="radio"]:checked + span {
+    color: #721c24;
+}
+
+/* Traffic light / semaphore */
+.traffic-light {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.light {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    background: #ddd;
+    transition: background 0.3s;
+}
+
+.light.active-red {
+    background: #dc3545;
+    border-color: #c82333;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+}
+
+.light.active-yellow {
+    background: #ffc107;
+    border-color: #e0a800;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+}
+
+.light.active-green {
+    background: #28a745;
+    border-color: #1e7e34;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+}
+
+.traffic-light-body {
+    background: #333;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* History display */
+.history-display {
+    font-family: monospace;
+    font-size: 12px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    max-height: 120px;
+    overflow-y: auto;
+    color: #555;
+    margin-top: 8px;
+}
+
+/* Buttons */
+button {
+    background: #0f6cbf;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+button:hover {
+    background: #0a5a9e;
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.button-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+input[type="text"] {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #333;
+}
+
+select {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #333;
+}
+
+/* Feedback */
+.feedback {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: none;
+}
+
+.feedback.show {
+    display: block;
+}
+
+.feedback.correct {
+    color: #155724;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.feedback.incorrect {
+    color: #721c24;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+.result-display {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #e8f0fe;
+    border: 1px solid #c5d8f6;
+    margin-top: 8px;
+}
+
+/* State display */
+.state-display {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f6cbf;
+    padding: 6px;
+}
+
+/* Traffic light / semaphore */
+.traffic-light-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.traffic-light {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+}
+
+.traffic-light-state {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 3px solid #aaa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: transparent;
+    background: #ddd;
+    transition: background 0.25s, border-color 0.25s, color 0.25s;
+    cursor: default;
+    user-select: none;
+}
+
+.traffic-light-state.active {
+    color: #fff;
+}
+
+.traffic-light-state.inactive {
+    background: #ddd;
+    border-color: #aaa;
+    color: transparent;
+}
+
+.state-green.active   { background: #28a745; border-color: #1e7e34; }
+.state-yellow.active  { background: #ffc107; border-color: #d39e00; color: #333; }
+.state-red.active     { background: #dc3545; border-color: #bd2130; }
+
+.traffic-light-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.traffic-history {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+.traffic-history-label {
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.traffic-history-content {
+    font-family: monospace;
+    color: #333;
+    word-break: break-word;
+}
+
+/* Drag-drop (exercise 12) */
+.drag-drop-container {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.drag-source {
+    flex: 1;
+    min-width: 160px;
+}
+
+.drag-source h3, .drag-target h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #eee;
+}
+
+.drag-target {
+    flex: 2;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.drag-item {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    font-family: monospace;
+    font-size: 13px;
+    cursor: grab;
+    user-select: none;
+}
+
+.drag-item:hover { background: #f0f0f0; }
+.drag-item.dragging { opacity: 0.4; }
+
+.drop-zone {
+    min-height: 42px;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+    padding: 6px 10px;
+    background: #fafafa;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.drop-zone.drag-over {
+    background: #e8f0fe;
+    border-color: #0f6cbf;
+}
+
+.drop-zone.correct { background: #d4edda; border-color: #28a745; border-style: solid; }
+.drop-zone.incorrect { background: #f8d7da; border-color: #dc3545; border-style: solid; }
+
+.drop-zone-label {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Table cell states */
+.cell-neutral { background: #fff; }
+.cell-correct { background: #d4edda; }
+.cell-incorrect { background: #f8d7da; }
+
+/* Feedback message divs set by JS as .message .success/.error */
+.message {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    border: 1px solid #c5d8f6;
+    background: #e8f0fe;
+    color: #333;
+}
+
+.message.success {
+    background: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.message.error {
+    background: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #fafafa;
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+.quiz-option:hover {
+    background: #f0f0f0;
+}
+
+.quiz-option input[type="radio"] {
+    accent-color: #0f6cbf;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kapitola 4: Převody a klasifikace</h1>
+
+        <!-- Exercise 11 -->
+        <div class="exercise">
+            <h2>Cvičení 11: Sestavte tabulku přechodů</h2>
+            <p style="margin-bottom: 15px; font-size: 14px; color: #555;">
+                Na základě DFA z cvičení 4: A = ({q₀,q₁,q₂}, {a,b}, δ, q₀, {q₂})
+            </p>
+            <div class="table-wrapper">
+                <table id="ex11-table">
+                    <thead>
+                        <tr>
+                            <th>Stav</th>
+                            <th>a</th>
+                            <th>b</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>→ q₀</td>
+                            <td class="cell-neutral"><select name="q0a"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+                            <td class="cell-neutral"><select name="q0b"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+                        </tr>
+                        <tr>
+                            <td>q₁</td>
+                            <td class="cell-neutral"><select name="q1a"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+                            <td class="cell-neutral"><select name="q1b"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+                        </tr>
+                        <tr>
+                            <td>← q₂</td>
+                            <td class="cell-neutral"><select name="q2a"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+                            <td class="cell-neutral"><select name="q2b"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="button-group">
+                <button onclick="checkExercise11()">Kontrola</button>
+                <button onclick="resetExercise11()">Reset</button>
+            </div>
+            <div id="ex11-message"></div>
+        </div>
+
+        <!-- Exercise 12 -->
+        <div class="exercise">
+            <h2>Cvičení 12: Regulární výraz → jazyk</h2>
+            <p style="margin-bottom: 15px; font-size: 14px; color: #555;">
+                Přetažením regulárních výrazů přiřaďte jejich jazykové popisy.
+            </p>
+            <div class="drag-drop-container">
+                <div class="drag-source">
+                    <h3>Regulární výrazy</h3>
+                    <div class="drag-item" draggable="true" data-regex="a*b">a*b</div>
+                    <div class="drag-item" draggable="true" data-regex="(a+b)*">(a+b)*</div>
+                    <div class="drag-item" draggable="true" data-regex="a(a+b)*b">a(a+b)*b</div>
+                    <div class="drag-item" draggable="true" data-regex="(ab)*">(ab)*</div>
+                </div>
+                <div class="drag-target">
+                    <h3>Jazykové popisy</h3>
+                    <div class="drop-zone" data-expected="a*b">
+                        <span class="drop-zone-label">Slova z libovolného počtu a následovaných jedním b</span>
+                    </div>
+                    <div class="drop-zone" data-expected="(a+b)*">
+                        <span class="drop-zone-label">Všechna slova nad {a, b} včetně ε</span>
+                    </div>
+                    <div class="drop-zone" data-expected="a(a+b)*b">
+                        <span class="drop-zone-label">Slova začínající na a a končící na b</span>
+                    </div>
+                    <div class="drop-zone" data-expected="(ab)*">
+                        <span class="drop-zone-label">Slova tvaru abab…ab včetně ε</span>
+                    </div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button onclick="checkExercise12()">Kontrola</button>
+                <button onclick="resetExercise12()">Reset</button>
+            </div>
+            <div id="ex12-message"></div>
+        </div>
+
+        <!-- Exercise 13 -->
+        <div class="exercise">
+            <h2>Cvičení 13: Klasifikace přepisovacích pravidel</h2>
+            <p style="margin-bottom: 15px; font-size: 14px; color: #555;">
+                U každého pravidla určete jeho typ (Chomského hierarchie).
+            </p>
+            <div id="ex13-questions"></div>
+            <div class="button-group">
+                <button onclick="checkExercise13()">Kontrola</button>
+                <button onclick="resetExercise13()">Reset</button>
+            </div>
+            <div id="ex13-message"></div>
+        </div>
+
+        <!-- Exercise 14 -->
+        <div class="exercise">
+            <h2>Cvičení 14: Semafor - praktický konečný automat</h2>
+            <p style="margin-bottom: 15px; font-size: 14px; color: #555;">
+                Simulace jednoduchých přechodů semaforu. Klikněte na tlačítko pro časový impuls.
+            </p>
+            <div class="traffic-light-container">
+                <div class="traffic-light">
+                    <div class="traffic-light-state state-green active" id="light-green">Zelená</div>
+                    <div class="traffic-light-state state-yellow inactive" id="light-yellow">Žlutá</div>
+                    <div class="traffic-light-state state-red inactive" id="light-red">Červená</div>
+                </div>
+                <div class="traffic-light-controls">
+                    <button onclick="advanceTrafficLight()">Časový impuls</button>
+                    <button onclick="resetTrafficLight()">Reset</button>
+                </div>
+                <div class="traffic-history">
+                    <div class="traffic-history-label">Historie přechodů:</div>
+                    <div class="traffic-history-content" id="traffic-history">Zelená</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Exercise 11 - Transition Table
+        const correctAnswers11 = {
+            q0a: 'q1',
+            q0b: 'q0',
+            q1a: 'q1',
+            q1b: 'q2',
+            q2a: 'q2',
+            q2b: 'q2'
+        };
+
+        function checkExercise11() {
+            const table = document.getElementById('ex11-table');
+            const selects = table.querySelectorAll('select');
+            let allCorrect = true;
+            let correctCount = 0;
+
+            selects.forEach(select => {
+                const name = select.name;
+                const value = select.value;
+                const td = select.closest('td');
+                const isCorrect = value === correctAnswers11[name];
+
+                if (value === '' || !isCorrect) {
+                    td.classList.remove('cell-correct');
+                    td.classList.add('cell-incorrect');
+                    allCorrect = false;
+                } else {
+                    td.classList.remove('cell-incorrect');
+                    td.classList.add('cell-correct');
+                    correctCount++;
+                }
+            });
+
+            const message = document.getElementById('ex11-message');
+            if (allCorrect) {
+                message.className = 'message success';
+                message.textContent = 'Výborně! Všechny odpovědi jsou správné.';
+            } else {
+                message.className = 'message error';
+                message.textContent = `Chyba! Správně: ${correctCount}/6`;
+            }
+        }
+
+        function resetExercise11() {
+            const table = document.getElementById('ex11-table');
+            const selects = table.querySelectorAll('select');
+            selects.forEach(select => {
+                select.value = '';
+                select.closest('td').classList.remove('cell-correct', 'cell-incorrect');
+                select.closest('td').classList.add('cell-neutral');
+            });
+            document.getElementById('ex11-message').textContent = '';
+        }
+
+        // Exercise 12 - Drag & Drop
+        let draggedItem = null;
+
+        document.addEventListener('dragstart', function(e) {
+            if (e.target.classList.contains('drag-item')) {
+                draggedItem = e.target;
+                e.target.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            }
+        });
+
+        document.addEventListener('dragend', function(e) {
+            if (e.target.classList.contains('drag-item')) {
+                e.target.classList.remove('dragging');
+            }
+        });
+
+        document.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            const dropZone = e.target.closest('.drop-zone');
+            if (dropZone) {
+                dropZone.classList.add('drag-over');
+                e.dataTransfer.dropEffect = 'move';
+            }
+        });
+
+        document.addEventListener('dragleave', function(e) {
+            const dropZone = e.target.closest('.drop-zone');
+            if (dropZone) {
+                dropZone.classList.remove('drag-over');
+            }
+        });
+
+        document.addEventListener('drop', function(e) {
+            e.preventDefault();
+            const dropZone = e.target.closest('.drop-zone');
+            if (dropZone && draggedItem) {
+                dropZone.classList.remove('drag-over');
+                const existing = dropZone.querySelector('.dropped-item');
+                if (existing) {
+                    existing.remove();
+                }
+                const item = draggedItem.cloneNode(true);
+                item.classList.remove('drag-item', 'dragging');
+                item.classList.add('dropped-item');
+                item.draggable = false;
+                const btn = document.createElement('button');
+                btn.textContent = '×';
+                btn.onclick = function() {
+                    item.remove();
+                };
+                item.appendChild(btn);
+                dropZone.appendChild(item);
+                draggedItem = null;
+            }
+        });
+
+        function checkExercise12() {
+            const dropZones = document.querySelectorAll('.drop-zone');
+            let allCorrect = true;
+
+            dropZones.forEach(zone => {
+                const expected = zone.dataset.expected;
+                const droppedItem = zone.querySelector('.dropped-item');
+                const isCorrect = droppedItem && droppedItem.dataset.regex === expected;
+
+                zone.classList.remove('correct', 'incorrect');
+                if (isCorrect) {
+                    zone.classList.add('correct');
+                } else {
+                    zone.classList.add('incorrect');
+                    allCorrect = false;
+                }
+            });
+
+            const message = document.getElementById('ex12-message');
+            if (allCorrect) {
+                message.className = 'message success';
+                message.textContent = 'Výborně! Všechny přiřazení jsou správná.';
+            } else {
+                message.className = 'message error';
+                message.textContent = 'Chyba! Zkontrolujte přiřazení.';
+            }
+        }
+
+        function resetExercise12() {
+            const dropZones = document.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => {
+                const dropped = zone.querySelector('.dropped-item');
+                if (dropped) {
+                    dropped.remove();
+                }
+                zone.classList.remove('correct', 'incorrect');
+            });
+            document.getElementById('ex12-message').textContent = '';
+        }
+
+        // Exercise 13 - Multiple Choice
+        const ex13Questions = [
+            {
+                rule: 'A → aB',
+                correct: 'type3',
+                types: ['type3', 'type2', 'type1', 'type0']
+            },
+            {
+                rule: 'A → aBc',
+                correct: 'type2',
+                types: ['type3', 'type2', 'type1', 'type0']
+            },
+            {
+                rule: 'aAb → aαb',
+                correct: 'type1',
+                types: ['type3', 'type2', 'type1', 'type0']
+            },
+            {
+                rule: 'AB → CD',
+                correct: 'type0',
+                types: ['type3', 'type2', 'type1', 'type0']
+            },
+            {
+                rule: 'S → ε (S se nevyskytuje na pravé straně)',
+                correct: 'type3',
+                types: ['type3', 'type2', 'type1', 'type0']
+            },
+            {
+                rule: 'A → a',
+                correct: 'type3',
+                types: ['type3', 'type2', 'type1', 'type0']
+            }
+        ];
+
+        const typeLabels = {
+            type3: 'Regulární (typ 3)',
+            type2: 'Bezkontextová (typ 2)',
+            type1: 'Kontextová (typ 1)',
+            type0: 'Neomezená (typ 0)'
+        };
+
+        function initExercise13() {
+            const container = document.getElementById('ex13-questions');
+            container.innerHTML = '';
+
+            ex13Questions.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                div.id = `q13-${idx}`;
+
+                const text = document.createElement('div');
+                text.className = 'question-text';
+                text.textContent = q.rule;
+
+                const options = document.createElement('div');
+                options.className = 'question-options';
+
+                q.types.forEach(type => {
+                    const label = document.createElement('label');
+                    label.className = 'question-option';
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = `q13-${idx}`;
+                    input.value = type;
+                    label.appendChild(input);
+                    const span = document.createElement('span');
+                    span.textContent = typeLabels[type];
+                    label.appendChild(span);
+                    options.appendChild(label);
+                });
+
+                div.appendChild(text);
+                div.appendChild(options);
+                container.appendChild(div);
+            });
+        }
+
+        function checkExercise13() {
+            let allCorrect = true;
+            let correctCount = 0;
+
+            ex13Questions.forEach((q, idx) => {
+                const selected = document.querySelector(`input[name="q13-${idx}"]:checked`);
+                const div = document.getElementById(`q13-${idx}`);
+
+                div.classList.remove('correct', 'incorrect');
+
+                if (selected && selected.value === q.correct) {
+                    div.classList.add('correct');
+                    correctCount++;
+                } else {
+                    div.classList.add('incorrect');
+                    allCorrect = false;
+                }
+            });
+
+            const message = document.getElementById('ex13-message');
+            if (allCorrect) {
+                message.className = 'message success';
+                message.textContent = 'Výborně! Všechny odpovědi jsou správné.';
+            } else {
+                message.className = 'message error';
+                message.textContent = `Chyba! Správně: ${correctCount}/${ex13Questions.length}`;
+            }
+        }
+
+        function resetExercise13() {
+            document.querySelectorAll('input[type="radio"][name^="q13-"]').forEach(input => {
+                input.checked = false;
+            });
+            document.querySelectorAll('.question').forEach(q => {
+                q.classList.remove('correct', 'incorrect');
+            });
+            document.getElementById('ex13-message').textContent = '';
+        }
+
+        // Exercise 14 - Traffic Light
+        const trafficStates = ['green', 'yellow', 'red'];
+        const stateNames = { green: 'Zelená', yellow: 'Žlutá', red: 'Červená' };
+        let currentStateIndex = 0;
+        let trafficHistory = ['Zelená'];
+
+        function updateTrafficLight() {
+            trafficStates.forEach((state, idx) => {
+                const element = document.getElementById(`light-${state}`);
+                element.classList.toggle('active', idx === currentStateIndex);
+                element.classList.toggle('inactive', idx !== currentStateIndex);
+            });
+            updateTrafficHistory();
+        }
+
+        function updateTrafficHistory() {
+            const historyDiv = document.getElementById('traffic-history');
+            historyDiv.textContent = trafficHistory.join(' → ');
+        }
+
+        function advanceTrafficLight() {
+            currentStateIndex = (currentStateIndex + 1) % trafficStates.length;
+            trafficHistory.push(stateNames[trafficStates[currentStateIndex]]);
+            updateTrafficLight();
+        }
+
+        function resetTrafficLight() {
+            currentStateIndex = 0;
+            trafficHistory = ['Zelená'];
+            updateTrafficLight();
+        }
+
+        // Initialize
+        initExercise13();
+        updateTrafficLight();
+
+        // Iframe height messaging
+        function adjustIframeHeight() {
+            const height = document.body.scrollHeight;
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'iframeResize', height: height }, '*');
+            }
+        }
+
+        // Use ResizeObserver to watch for content changes
+        const observer = new ResizeObserver(() => {
+            adjustIframeHeight();
+        });
+
+        observer.observe(document.body);
+
+        // Initial height
+        setTimeout(adjustIframeHeight, 500);
+    </script>
+</body>
+</html>

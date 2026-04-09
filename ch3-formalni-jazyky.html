@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kapitola 3: Formální jazyky a gramatiky</title>
+    <style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f4f4f4;
+    color: #333;
+    padding: 20px;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.container {
+    max-width: 860px;
+    margin: 0 auto;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+}
+
+/* Remove the old purple gradient header */
+.header {
+    background: none;
+    color: #1a1a1a;
+    padding: 0 0 16px 0;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.header p {
+    font-size: 13px;
+    color: #666;
+    opacity: 1;
+}
+
+h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.content {
+    padding: 0;
+}
+
+.exercise {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: none;
+}
+
+.exercise h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.exercise-label {
+    display: inline-block;
+    background: #0f6cbf;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.input-group {
+    margin-bottom: 12px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 4px;
+}
+
+input[type="text"] {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #333;
+    width: 100%;
+}
+
+select {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #333;
+}
+
+button {
+    background: #0f6cbf;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+button:hover {
+    background: #0a5a9e;
+}
+
+/* Regex lab */
+.regex-output {
+    font-family: monospace;
+    font-size: 13px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    min-height: 40px;
+    margin-top: 8px;
+    word-break: break-all;
+}
+
+.match {
+    background: #fff3cd;
+    border-radius: 2px;
+    padding: 0 2px;
+}
+
+/* Chomsky hierarchy sort */
+.hierarchy-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hierarchy-level {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    background: #fafafa;
+}
+
+.hierarchy-level-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.drop-zone {
+    min-height: 40px;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+    padding: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.drop-zone.drag-over {
+    background: #e8f0fe;
+    border-color: #0f6cbf;
+}
+
+.grammar-chip {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: grab;
+    user-select: none;
+    font-family: monospace;
+}
+
+.grammar-chip:hover {
+    background: #f0f0f0;
+}
+
+/* Derivation */
+.derivation-steps {
+    font-family: monospace;
+    font-size: 13px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px 0;
+    min-height: 60px;
+}
+
+.derivation-step {
+    padding: 2px 0;
+    color: #333;
+}
+
+.derivation-step .arrow {
+    color: #888;
+}
+
+/* Feedback */
+.quiz-feedback {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: none;
+}
+
+.quiz-feedback.show {
+    display: block;
+}
+
+.quiz-feedback.correct {
+    color: #155724;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.quiz-feedback.incorrect {
+    color: #721c24;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+.feedback {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: none;
+}
+
+.feedback.show {
+    display: block;
+}
+
+.feedback.correct {
+    color: #155724;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.feedback.incorrect {
+    color: #721c24;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #fafafa;
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+.quiz-option:hover {
+    background: #f0f0f0;
+}
+
+.quiz-option input[type="radio"] {
+    accent-color: #0f6cbf;
+}
+
+.result-display {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #e8f0fe;
+    border: 1px solid #c5d8f6;
+    margin-top: 8px;
+}
+/* Regex lab missing classes */
+.priority-box {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 12px;
+}
+
+.error-box {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #721c24;
+    margin-bottom: 10px;
+    display: none;
+}
+
+.error-box.show { display: block; }
+
+textarea {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: monospace;
+    color: #333;
+    width: 100%;
+    resize: vertical;
+}
+
+.generated-words {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-height: 36px;
+    margin-top: 6px;
+}
+
+.word-badge {
+    display: inline-block;
+    background: #e8f0fe;
+    border: 1px solid #c5d8f6;
+    color: #0f6cbf;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.word-badge.match {
+    background: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.results {
+    margin-top: 12px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    font-size: 13px;
+}
+
+#results-list {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.result-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 13px;
+    border: 1px solid transparent;
+}
+
+.icon-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #28a745;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.icon-cross {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #dc3545;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.result-item:has(.icon-check) {
+    background: #f0fff4;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.result-item:has(.icon-cross) {
+    background: #fff5f5;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.result-icon { margin-right: 6px; }
+
+/* Button classes */
+.btn-primary {
+    background: #0f6cbf;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+}
+.btn-primary:hover { background: #0a5a9e; }
+
+.btn-secondary {
+    background: #6c757d;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+}
+.btn-secondary:hover { background: #5a6268; }
+
+.button-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+}
+
+/* Drag sort for Chomsky hierarchy */
+.drag-sort-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.drag-sort-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: grab;
+    user-select: none;
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+.drag-sort-item:hover { background: #f5f5f5; }
+.drag-sort-item.dragging { opacity: 0.4; }
+.drag-sort-item.drag-over { background: #e8f0fe; border-color: #0f6cbf; }
+
+.drag-number {
+    width: 24px;
+    height: 24px;
+    background: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    flex-shrink: 0;
+}
+
+.step-indicator {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.step-indicator span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ddd;
+}
+
+.step-indicator span.active {
+    background: #0f6cbf;
+}
+
+/* Derivation exercise */
+.derivation-step {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    transition: border-color 0.15s;
+}
+
+.derivation-step.current {
+    border-color: #0f6cbf;
+    background: #e8f0fe;
+}
+
+.derivation-formula {
+    font-family: monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.derivation-rule {
+    font-size: 12px;
+    color: #888;
+}
+
+.derivation-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+/* Quiz section */
+.quiz-section {
+    margin-top: 16px;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 16px 0 0;
+    font-size: 12px;
+    color: #aaa;
+    border-top: 1px solid #eee;
+    margin-top: 20px;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kapitola 3: Formální jazyky a gramatiky</h1>
+            <p>Interaktivní cvičení — Regulární výrazy, Chomského hierarchie, Derivace</p>
+        </div>
+
+        <div class="content">
+            <!-- Exercise 8: Regex Lab -->
+            <div class="exercise">
+                <span class="exercise-label">Cvičení 8</span>
+                <h2>Laboratoř regulárních výrazů</h2>
+
+                <div class="input-group">
+                    <label for="regex-input">Formální regulární výraz:</label>
+                    <input type="text" id="regex-input" value="ab*+c" placeholder="Např. ab*+c">
+                </div>
+
+                <div class="priority-box">
+                    <strong>Priorita operátorů:</strong> iterace (*) > zřetězení (·) > sjednocení (+)
+                </div>
+
+                <div class="error-box" id="regex-error"></div>
+
+                <div class="input-group">
+                    <label for="test-words">Testované slova (jedno na řádek):</label>
+                    <textarea id="test-words" rows="8">a
+ab
+abb
+abbb
+c
+ac
+bc
+ba</textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="testRegex()">Testovat výraz</button>
+                    <button class="btn-secondary" onclick="resetRegex()">Resetovat</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Generovaná slova délky 0-5 (prvků {a,b,c}):</label>
+                    <div class="generated-words" id="generated-words"></div>
+                </div>
+
+                <div class="results" id="regex-results" style="display: none;">
+                    <strong>Výsledky testování:</strong>
+                    <div id="results-list"></div>
+                </div>
+            </div>
+
+            <!-- Exercise 9: Chomsky Hierarchy Sort -->
+            <div class="exercise">
+                <span class="exercise-label">Cvičení 9</span>
+                <h2>Chomského hierarchie — seřazení</h2>
+                <p style="margin-bottom: 15px; font-size: 14px; color: #666;">
+                    Seřaďte typy gramatik od nejzávislnějšího (nahoře) k nejobecnějšímu (dole):
+                </p>
+
+                <div class="drag-sort-container" id="drag-container">
+                    <!-- Items will be populated by JS -->
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="checkHierarchy()">Zkontrolovat</button>
+                    <button class="btn-secondary" onclick="resetHierarchy()">Resetovat</button>
+                </div>
+
+                <div id="hierarchy-feedback" style="display: none; margin-top: 15px; padding: 12px; border-radius: 4px;">
+                </div>
+            </div>
+
+            <!-- Exercise 10: Derivation -->
+            <div class="exercise">
+                <span class="exercise-label">Cvičení 10</span>
+                <h2>Derivace v regulární gramatice</h2>
+                <p style="margin-bottom: 15px; font-size: 14px; color: #666;">
+                    Gramatika G = ({S, A}, {a, b}, P, S) s pravidly: S → aA, A → bS | ε
+                </p>
+
+                <div class="derivation-step current" id="derivation-display">
+                    <div class="derivation-formula">S</div>
+                    <div class="derivation-rule">Počáteční symbol</div>
+                </div>
+
+                <div class="derivation-controls">
+                    <button class="btn-secondary" onclick="prevDerivation()">← Zpět</button>
+                    <div class="step-indicator">
+                        <span id="step-counter">1</span> / <span id="total-steps">7</span>
+                    </div>
+                    <button class="btn-primary" onclick="nextDerivation()">Dál →</button>
+                </div>
+
+                <button class="btn-secondary" onclick="resetDerivation()" style="width: 100%; margin-bottom: 15px;">Resetovat</button>
+
+                <div class="quiz-section">
+                    <label for="language-answer">Jaký jazyk tato gramatika generuje?</label>
+                    <input type="text" id="language-answer" placeholder="L = ...">
+                    <button class="btn-primary" onclick="checkLanguageAnswer()" style="width: 100%; margin-top: 10px;">Zkontrolovat</button>
+                    <div id="language-feedback" class="quiz-feedback"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 — Interaktivní cvičení k předmětu Formální jazyky a automaty</p>
+        </div>
+    </div>
+
+    <script>
+        // Exercise 8: Regex Lab
+        function generateWords() {
+            const alphabet = ['a', 'b', 'c'];
+            const words = ['ε'];
+            const queue = [''];
+
+            while (queue.length > 0) {
+                const word = queue.shift();
+                if (word.length < 5) {
+                    for (let char of alphabet) {
+                        const newWord = word + char;
+                        words.push(newWord);
+                        queue.push(newWord);
+                    }
+                }
+            }
+
+            return words.sort((a, b) => a.length - b.length || a.localeCompare(b));
+        }
+
+        function convertRegexToJS(regex) {
+            // Formal language notation → JS regex:
+            //   +  = sjednocení (union)   → |
+            //   *  = iterace (Kleene star) → * (same)
+            //   ·  = zřetězení (concat)   → (omit)
+            //   ε  = prázdné slovo         → (empty string)
+            //   parentheses preserved as-is
+            let jsRegex = regex
+                .replace(/\s+/g, '')   // strip all whitespace
+                .replace(/ε/g, '')     // ε = empty string
+                .replace(/\+/g, '|')  // + = union
+                .replace(/·/g, '');   // · = concatenation (implicit in regex)
+            return jsRegex;
+        }
+
+        function testRegex() {
+            const regexInput = document.getElementById('regex-input').value.trim();
+            const testWordsInput = document.getElementById('test-words').value;
+            const errorBox = document.getElementById('regex-error');
+            const resultsList = document.getElementById('results-list');
+            const resultsDiv = document.getElementById('regex-results');
+
+            errorBox.classList.remove('show');
+
+            if (!regexInput) {
+                errorBox.textContent = 'Chyba: Zadejte regulární výraz';
+                errorBox.classList.add('show');
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            const jsRegex = convertRegexToJS(regexInput);
+            let regex;
+
+            try {
+                regex = new RegExp('^(?:' + jsRegex + ')$');
+            } catch (e) {
+                errorBox.textContent = 'Chyba: Neplatný regulární výraz — ' + e.message;
+                errorBox.classList.add('show');
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            const testWords = testWordsInput.split('\n')
+                .map(w => w.trim())
+                .filter(w => w.length > 0);
+
+            resultsList.innerHTML = '';
+
+            for (let word of testWords) {
+                const matches = regex.test(word);
+                const displayWord = word === '' ? 'ε' : word;
+                const icon = matches ? '✓' : '✗';
+                const iconClass = matches ? 'icon-check' : 'icon-cross';
+
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                item.innerHTML = `
+                    <div class="result-icon ${iconClass}">${icon}</div>
+                    <span>${displayWord}</span>
+                `;
+                resultsList.appendChild(item);
+            }
+
+            resultsDiv.style.display = 'block';
+            updateGeneratedWords();
+        }
+
+        function updateGeneratedWords() {
+            const regexInput = document.getElementById('regex-input').value.trim();
+            const generatedDiv = document.getElementById('generated-words');
+
+            if (!regexInput) {
+                generatedDiv.innerHTML = '';
+                return;
+            }
+
+            const jsRegex = convertRegexToJS(regexInput);
+            let regex;
+
+            try {
+                regex = new RegExp('^(?:' + jsRegex + ')$');
+            } catch (e) {
+                generatedDiv.innerHTML = '<em>Neplatný výraz</em>';
+                return;
+            }
+
+            const words = generateWords();
+            const matching = words.filter(w => {
+                const testWord = w === 'ε' ? '' : w;
+                return regex.test(testWord);
+            });
+
+            if (matching.length === 0) {
+                generatedDiv.innerHTML = '<em>Žádná slova neodpovídají výrazu</em>';
+            } else {
+                generatedDiv.innerHTML = matching.map(w => {
+                    const display = w === 'ε' ? 'ε' : w;
+                    return `<span class="word-badge">${display}</span>`;
+                }).join('');
+            }
+        }
+
+        function resetRegex() {
+            document.getElementById('regex-input').value = 'ab*+c';
+            document.getElementById('test-words').value = 'a\nab\nabb\nabbb\nc\nac\nbc\nba';
+            document.getElementById('regex-error').classList.remove('show');
+            document.getElementById('regex-results').style.display = 'none';
+            updateGeneratedWords();
+        }
+
+        // Exercise 9: Chomsky Hierarchy
+        const hierarchyItems = [
+            { id: 1, text: 'Typ 3 — Regulární' },
+            { id: 2, text: 'Typ 2 — Bezkontextová' },
+            { id: 3, text: 'Typ 1 — Kontextová' },
+            { id: 0, text: 'Typ 0 — Neomezená' }
+        ];
+
+        const correctOrder = [1, 2, 3, 0];
+
+        function shuffleArray(arr) {
+            const newArr = [...arr];
+            for (let i = newArr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+            }
+            return newArr;
+        }
+
+        let currentHierarchyOrder = [3, 1, 0, 2]; // Initial shuffled order by indices
+
+        function initHierarchy() {
+            const container = document.getElementById('drag-container');
+            container.innerHTML = '';
+
+            for (let i = 0; i < currentHierarchyOrder.length; i++) {
+                const itemIndex = currentHierarchyOrder[i];
+                const item = hierarchyItems[itemIndex];
+                const itemEl = document.createElement('div');
+                itemEl.className = 'drag-sort-item';
+                itemEl.draggable = true;
+                itemEl.dataset.id = item.id;
+                itemEl.innerHTML = `<span class="drag-number">${i + 1}</span>${item.text}`;
+
+                itemEl.addEventListener('dragstart', handleDragStart);
+                itemEl.addEventListener('dragend', handleDragEnd);
+                itemEl.addEventListener('dragover', handleDragOver);
+                itemEl.addEventListener('drop', handleDrop);
+                itemEl.addEventListener('dragleave', handleDragLeave);
+
+                container.appendChild(itemEl);
+            }
+        }
+
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            document.querySelectorAll('.drag-sort-item').forEach(el => {
+                el.classList.remove('dragging', 'drag-over');
+            });
+            draggedElement = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            if (this !== draggedElement) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (this !== draggedElement && draggedElement) {
+                const container = draggedElement.parentNode;
+                const allItems = Array.from(container.children);
+                const draggedIndex = allItems.indexOf(draggedElement);
+                const targetIndex = allItems.indexOf(this);
+
+                if (draggedIndex < targetIndex) {
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedElement, this);
+                }
+
+                updateHierarchyOrder();
+            }
+            this.classList.remove('drag-over');
+        }
+
+        function updateHierarchyOrder() {
+            const items = document.querySelectorAll('.drag-sort-item');
+            const newOrder = Array.from(items).map(el => parseInt(el.dataset.id));
+            currentHierarchyOrder = newOrder;
+        }
+
+        function checkHierarchy() {
+            const feedback = document.getElementById('hierarchy-feedback');
+            const items = document.querySelectorAll('.drag-sort-item');
+            const currentOrder = Array.from(items).map(el => parseInt(el.dataset.id));
+
+            if (JSON.stringify(currentOrder) === JSON.stringify(correctOrder)) {
+                feedback.className = 'quiz-feedback show correct';
+                feedback.textContent = '✓ Správně! Pořadí Chomského hierarchie je správné.';
+            } else {
+                feedback.className = 'quiz-feedback show incorrect';
+                feedback.textContent = '✗ Chybně. Zkuste znovu. Hint: Od nejrestriktivnější (Typ 3) k nejobecnější (Typ 0).';
+            }
+        }
+
+        function resetHierarchy() {
+            document.getElementById('hierarchy-feedback').style.display = 'none';
+            currentHierarchyOrder = [3, 1, 0, 2]; // Reset to initial shuffle
+            initHierarchy();
+        }
+
+        // Exercise 10: Derivation
+        const derivationSteps = [
+            { formula: 'S', rule: 'Počáteční symbol', applied: '' },
+            { formula: 'aA', rule: 'Použité pravidlo: S → aA', applied: 'S → aA' },
+            { formula: 'abS', rule: 'Použité pravidlo: A → bS', applied: 'A → bS' },
+            { formula: 'abaA', rule: 'Použité pravidlo: S → aA', applied: 'S → aA' },
+            { formula: 'ababS', rule: 'Použité pravidlo: A → bS', applied: 'A → bS' },
+            { formula: 'ababaA', rule: 'Použité pravidlo: S → aA', applied: 'S → aA' },
+            { formula: 'ababa', rule: 'Použité pravidlo: A → ε', applied: 'A → ε' }
+        ];
+
+        let currentStep = 0;
+
+        function displayDerivation() {
+            const step = derivationSteps[currentStep];
+            const display = document.getElementById('derivation-display');
+
+            display.innerHTML = `
+                <div class="derivation-formula">${step.formula}</div>
+                <div class="derivation-rule">${step.rule}</div>
+            `;
+
+            if (step.applied) {
+                display.innerHTML += `<div class="derivation-rule" style="margin-top: 8px; color: #555;">Aplikované: ${step.applied}</div>`;
+            }
+
+            display.classList.add('current');
+
+            document.getElementById('step-counter').textContent = currentStep + 1;
+
+            // Update buttons
+            document.querySelector('[onclick="prevDerivation()"]').disabled = currentStep === 0;
+            document.querySelector('[onclick="nextDerivation()"]').disabled = currentStep === derivationSteps.length - 1;
+        }
+
+        function nextDerivation() {
+            if (currentStep < derivationSteps.length - 1) {
+                currentStep++;
+                displayDerivation();
+            }
+        }
+
+        function prevDerivation() {
+            if (currentStep > 0) {
+                currentStep--;
+                displayDerivation();
+            }
+        }
+
+        function resetDerivation() {
+            currentStep = 0;
+            displayDerivation();
+            document.getElementById('language-answer').value = '';
+            document.getElementById('language-feedback').classList.remove('show');
+        }
+
+        function checkLanguageAnswer() {
+            const answer = document.getElementById('language-answer').value.trim();
+            const feedback = document.getElementById('language-feedback');
+
+            // Accept if contains (ab) or similar pattern
+            if (answer.toLowerCase().includes('(ab)') ||
+                answer.toLowerCase().includes('ab*') ||
+                answer.toLowerCase().includes('(ab)^') ||
+                answer.toLowerCase().includes('(ab)n')) {
+                feedback.className = 'quiz-feedback show correct';
+                feedback.textContent = '✓ Správně! Jazyk L = {(ab)^n | n ≥ 0} se skládá z libovolného počtu opakování řetězce "ab".';
+            } else {
+                feedback.className = 'quiz-feedback show incorrect';
+                feedback.textContent = '✗ Chybně. Nápověda: Gramatika generuje řetězce tvaru (ab)ⁿ, tedy opakování „ab" (včetně prázdného slova).';
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            resetRegex();
+            initHierarchy();
+            displayDerivation();
+
+            // Iframe height messaging
+            function updateHeight() {
+                const height = document.documentElement.scrollHeight;
+                if (window.parent !== window) {
+                    window.parent.postMessage({ type: 'iframeResize', height: height }, '*');
+                }
+            }
+
+            updateHeight();
+
+            const observer = new ResizeObserver(() => updateHeight());
+            observer.observe(document.documentElement);
+
+            window.addEventListener('resize', updateHeight);
+        });
+    </script>
+</body>
+</html>
