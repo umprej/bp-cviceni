@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cvičení: Interaktivní Vennův diagram</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
+  }
+  h1 { font-size: 1.4em; margin-bottom: 6px; }
+  .description { margin-bottom: 18px; color: #555; }
+  .card {
+    background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 20px; margin-bottom: 16px;
+  }
+  .sets { margin-bottom: 14px; font-weight: 600; }
+  .venn-container {
+    display: flex; justify-content: center; margin-bottom: 10px;
+  }
+  svg text { pointer-events: none; user-select: none; }
+  .region { cursor: pointer; transition: opacity 0.2s; }
+  .region:hover { opacity: 0.85; }
+  .info-panel {
+    margin-top: 16px; padding: 16px 20px; border-radius: 4px;
+    border: 2px solid #ddd; background: #fafafa; min-height: 60px;
+    transition: border-color 0.3s;
+  }
+  .info-panel.active { border-color: #0f6cbf; }
+  .info-title { font-weight: 700; font-size: 1.05em; margin-bottom: 4px; }
+  .info-elements { font-size: 1.15em; font-weight: 600; color: #0f6cbf; }
+  .info-desc { color: #555; margin-top: 4px; font-size: 0.95em; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: 0.9em;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch {
+    width: 16px; height: 16px; border-radius: 3px; border: 1px solid #aaa;
+  }
+</style>
+</head>
+<body>
+
+<h1>Cvičení: Interaktivní Vennův diagram</h1>
+<p class="description">Klikněte na jednotlivé oblasti Vennova diagramu a podívejte se, které prvky tam patří.</p>
+
+<div class="card">
+  <div class="sets">M = {1, 2, 3, 4} &nbsp;&nbsp; N = {3, 4, 5, 6}</div>
+
+  <div class="venn-container">
+    <svg width="420" height="260" viewBox="0 0 420 260" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <clipPath id="clipLeft">
+          <circle cx="160" cy="130" r="100"/>
+        </clipPath>
+        <clipPath id="clipRight">
+          <circle cx="260" cy="130" r="100"/>
+        </clipPath>
+      </defs>
+
+      <!-- Only M region (left crescent) -->
+      <g class="region" data-region="onlyM">
+        <circle cx="160" cy="130" r="100" fill="#3498db" opacity="0.35"/>
+        <!-- Cover the intersection part to create crescent click area -->
+      </g>
+
+      <!-- Only N region (right crescent) -->
+      <g class="region" data-region="onlyN">
+        <circle cx="260" cy="130" r="100" fill="#9b59b6" opacity="0.35"/>
+      </g>
+
+      <!-- Intersection region (drawn on top so it catches clicks) -->
+      <g class="region" data-region="intersection">
+        <!-- Intersection: clip left circle by right circle's clip path -->
+        <circle cx="160" cy="130" r="100" clip-path="url(#clipRight)" fill="#1abc9c" opacity="0.55"/>
+      </g>
+
+      <!-- Labels -->
+      <text x="120" y="135" text-anchor="middle" font-size="18" font-weight="700" fill="#2c3e50">M</text>
+      <text x="300" y="135" text-anchor="middle" font-size="18" font-weight="700" fill="#2c3e50">N</text>
+      <text x="210" y="135" text-anchor="middle" font-size="15" font-weight="600" fill="#fff">M ∩ N</text>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: rgba(52,152,219,0.45);"></div> Pouze M</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: rgba(26,188,156,0.7);"></div> M ∩ N</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: rgba(155,89,182,0.45);"></div> Pouze N</div>
+  </div>
+
+  <div class="info-panel" id="infoPanel">
+    <div style="color: #999; font-style: italic;">Klikněte na oblast v diagramu.</div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var regions = {
+    onlyM: {
+      title: 'Pouze M (M \\ N)',
+      elements: '{1, 2}',
+      desc: 'Prvky, které patří do M, ale nepatří do N.',
+      color: '#3498db'
+    },
+    onlyN: {
+      title: 'Pouze N (N \\ M)',
+      elements: '{5, 6}',
+      desc: 'Prvky, které patří do N, ale nepatří do M.',
+      color: '#9b59b6'
+    },
+    intersection: {
+      title: 'Průnik (M ∩ N)',
+      elements: '{3, 4}',
+      desc: 'Prvky, které patří do obou množin M i N.',
+      color: '#1abc9c'
+    }
+  };
+
+  var infoPanel = document.getElementById('infoPanel');
+
+  // Determine which region a click belongs to based on geometry
+  var svg = document.querySelector('svg');
+  var cx1 = 160, cy1 = 130, cx2 = 260, cy2 = 130, r = 100;
+
+  svg.addEventListener('click', function(e) {
+    var rect = svg.getBoundingClientRect();
+    var scaleX = 420 / rect.width;
+    var scaleY = 260 / rect.height;
+    var x = (e.clientX - rect.left) * scaleX;
+    var y = (e.clientY - rect.top) * scaleY;
+
+    var inLeft = Math.pow(x - cx1, 2) + Math.pow(y - cy1, 2) <= r * r;
+    var inRight = Math.pow(x - cx2, 2) + Math.pow(y - cy2, 2) <= r * r;
+
+    var regionKey = null;
+    if (inLeft && inRight) {
+      regionKey = 'intersection';
+    } else if (inLeft) {
+      regionKey = 'onlyM';
+    } else if (inRight) {
+      regionKey = 'onlyN';
+    }
+
+    if (!regionKey) return;
+
+    var data = regions[regionKey];
+    infoPanel.className = 'info-panel active';
+    infoPanel.style.borderColor = data.color;
+    infoPanel.innerHTML =
+      '<div class="info-title">' + data.title + '</div>' +
+      '<div class="info-elements">' + data.elements + '</div>' +
+      '<div class="info-desc">' + data.desc + '</div>';
+    sendHeight();
+  });
+
+  function sendHeight() {
+    requestAnimationFrame(function() {
+      var h = document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
+    });
+  }
+
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+})();
+</script>
+</body>
+</html>

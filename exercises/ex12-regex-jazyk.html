@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cvičení: Regulární výraz &rarr; jazyk</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
+}
+h2 { margin-bottom: 8px; }
+p.desc { margin-bottom: 16px; }
+.columns { display: flex; gap: 32px; flex-wrap: wrap; margin-bottom: 16px; }
+.col { flex: 1; min-width: 240px; }
+.col h3 { margin-bottom: 8px; font-size: 15px; }
+.drag-item {
+  display: inline-block; background: #0f6cbf; color: #fff; padding: 6px 14px;
+  border-radius: 4px; cursor: grab; margin: 4px 4px 4px 0; font-size: 14px; user-select: none;
+}
+.drag-item:active { cursor: grabbing; }
+.drop-zone {
+  border: 2px dashed #aaa; border-radius: 6px; padding: 10px 12px; margin-bottom: 10px;
+  min-height: 48px; transition: background 0.2s;
+}
+.drop-zone.over { background: #e0e7f1; border-color: #0f6cbf; }
+.drop-zone .label { color: #555; margin-bottom: 4px; }
+.drop-zone .placed {
+  display: inline-flex; align-items: center; background: #0f6cbf; color: #fff;
+  padding: 4px 10px; border-radius: 4px; margin-top: 4px; font-size: 14px;
+}
+.placed .remove { margin-left: 8px; cursor: pointer; font-weight: bold; }
+.drop-zone.zone-correct { background: #d4edda; border-color: #c3e6cb; }
+.drop-zone.zone-incorrect { background: #f8d7da; border-color: #f5c6cb; }
+.btn { background: #0f6cbf; color: #fff; border: none; border-radius: 4px; padding: 7px 16px; cursor: pointer; font-size: 14px; margin-right: 8px; }
+.btn:hover { opacity: 0.9; }
+.btn-secondary { background: #6c757d; }
+.feedback { margin-top: 12px; padding: 10px 14px; border-radius: 4px; display: none; }
+.feedback.correct { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; display: block; }
+.feedback.incorrect { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; display: block; }
+#sourcePool { display: flex; flex-wrap: wrap; gap: 4px; min-height: 40px; }
+</style>
+</head>
+<body>
+<h2>Cvičení: Regulární výraz &rarr; jazyk</h2>
+<p class="desc">Přetažením regulárních výrazů přiřaďte jejich jazykové popisy.</p>
+
+<div class="columns">
+  <div class="col">
+    <h3>Regulární výrazy</h3>
+    <div id="sourcePool">
+      <div class="drag-item" draggable="true" data-val="a*b">a*b</div>
+      <div class="drag-item" draggable="true" data-val="(a+b)*">(a+b)*</div>
+      <div class="drag-item" draggable="true" data-val="a(a+b)*b">a(a+b)*b</div>
+      <div class="drag-item" draggable="true" data-val="(ab)*">(ab)*</div>
+    </div>
+  </div>
+  <div class="col">
+    <h3>Jazykové popisy</h3>
+    <div class="drop-zone" data-expect="a*b" id="dz0">
+      <div class="label">Slova z libovolného počtu <em>a</em> následovaných jedním <em>b</em></div>
+    </div>
+    <div class="drop-zone" data-expect="(a+b)*" id="dz1">
+      <div class="label">Všechna slova nad {a, b} včetně &epsilon;</div>
+    </div>
+    <div class="drop-zone" data-expect="a(a+b)*b" id="dz2">
+      <div class="label">Slova začínající na <em>a</em> a končící na <em>b</em></div>
+    </div>
+    <div class="drop-zone" data-expect="(ab)*" id="dz3">
+      <div class="label">Slova tvaru abab&hellip;ab včetně &epsilon;</div>
+    </div>
+  </div>
+</div>
+
+<button class="btn" onclick="checkAnswers()">Zkontrolovat</button>
+<button class="btn btn-secondary" onclick="resetAll()">Reset</button>
+
+<div id="feedback" class="feedback"></div>
+
+<script>
+var dragVal = null;
+
+document.querySelectorAll('.drag-item').forEach(function(item) {
+  item.addEventListener('dragstart', function(e) {
+    dragVal = item.getAttribute('data-val');
+    e.dataTransfer.setData('text/plain', dragVal);
+  });
+});
+
+document.querySelectorAll('.drop-zone').forEach(function(zone) {
+  zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('over'); });
+  zone.addEventListener('dragleave', function() { zone.classList.remove('over'); });
+  zone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    zone.classList.remove('over');
+    var val = e.dataTransfer.getData('text/plain');
+    if (!val) return;
+    // remove existing placed item in this zone
+    var old = zone.querySelector('.placed');
+    if (old) returnToPool(old.getAttribute('data-val'));
+    if (old) old.remove();
+    // remove from other zones if placed elsewhere
+    document.querySelectorAll('.drop-zone .placed').forEach(function(p) {
+      if (p.getAttribute('data-val') === val) { returnToPool(val); p.remove(); }
+    });
+    // hide from pool
+    hideFromPool(val);
+    // create placed element
+    var el = document.createElement('div');
+    el.className = 'placed';
+    el.setAttribute('data-val', val);
+    el.innerHTML = val.replace(/</g,'&lt;') + ' <span class="remove" title="Odebrat">&times;</span>';
+    el.querySelector('.remove').addEventListener('click', function() {
+      returnToPool(val);
+      el.remove();
+    });
+    zone.appendChild(el);
+  });
+});
+
+function hideFromPool(val) {
+  document.querySelectorAll('#sourcePool .drag-item').forEach(function(d) {
+    if (d.getAttribute('data-val') === val) d.style.display = 'none';
+  });
+}
+function returnToPool(val) {
+  document.querySelectorAll('#sourcePool .drag-item').forEach(function(d) {
+    if (d.getAttribute('data-val') === val) d.style.display = '';
+  });
+}
+
+function checkAnswers() {
+  var score = 0;
+  var total = 4;
+  document.querySelectorAll('.drop-zone').forEach(function(zone) {
+    zone.classList.remove('zone-correct','zone-incorrect');
+    var placed = zone.querySelector('.placed');
+    var val = placed ? placed.getAttribute('data-val') : '';
+    if (val === zone.getAttribute('data-expect')) {
+      zone.classList.add('zone-correct');
+      score++;
+    } else {
+      zone.classList.add('zone-incorrect');
+    }
+  });
+  var fb = document.getElementById('feedback');
+  if (score === total) {
+    fb.className = 'feedback correct';
+    fb.textContent = 'Výborně! Všechny odpovědi jsou správné.';
+  } else {
+    fb.className = 'feedback incorrect';
+    fb.textContent = 'Chyba! Správně: ' + score + '/' + total;
+  }
+}
+
+function resetAll() {
+  document.querySelectorAll('.drop-zone .placed').forEach(function(p) { p.remove(); });
+  document.querySelectorAll('.drop-zone').forEach(function(z) { z.classList.remove('zone-correct','zone-incorrect'); });
+  document.querySelectorAll('#sourcePool .drag-item').forEach(function(d) { d.style.display = ''; });
+  var fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.style.display = 'none';
+}
+
+/* iframe resize messaging */
+function sendHeight() {
+  var h = document.documentElement.scrollHeight;
+  window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
+}
+var ro = new ResizeObserver(sendHeight);
+ro.observe(document.body);
+window.addEventListener('load', sendHeight);
+</script>
+</body>
+</html>

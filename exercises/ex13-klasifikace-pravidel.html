@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cvičení: Klasifikace přepisovacích pravidel</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
+}
+h2 { margin-bottom: 8px; }
+p.desc { margin-bottom: 16px; }
+.card {
+  background: #fff; border: 2px solid #ddd; border-radius: 6px; padding: 14px 18px;
+  margin-bottom: 12px; transition: border-color 0.3s;
+}
+.card.card-correct { border-color: #28a745; background: #d4edda; }
+.card.card-incorrect { border-color: #dc3545; background: #f8d7da; }
+.rule { font-family: 'Courier New', Courier, monospace; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.options label { display: inline-block; margin-right: 16px; cursor: pointer; }
+.options input { margin-right: 4px; }
+.btn { background: #0f6cbf; color: #fff; border: none; border-radius: 4px; padding: 7px 16px; cursor: pointer; font-size: 14px; margin-right: 8px; }
+.btn:hover { opacity: 0.9; }
+.btn-secondary { background: #6c757d; }
+.feedback { margin-top: 12px; padding: 10px 14px; border-radius: 4px; display: none; }
+.feedback.correct { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; display: block; }
+.feedback.incorrect { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; display: block; }
+</style>
+</head>
+<body>
+<h2>Cvičení: Klasifikace přepisovacích pravidel</h2>
+<p class="desc">U každého pravidla určete jeho typ (Chomského hierarchie).</p>
+
+<div id="cards"></div>
+
+<button class="btn" onclick="checkAnswers()">Zkontrolovat</button>
+<button class="btn btn-secondary" onclick="resetAll()">Reset</button>
+
+<div id="feedback" class="feedback"></div>
+
+<script>
+var rules = [
+  { text: 'A \u2192 aB', correct: 'type3' },
+  { text: 'A \u2192 aBc', correct: 'type2' },
+  { text: 'aAb \u2192 a\u03b1b', correct: 'type1' },
+  { text: 'AB \u2192 CD', correct: 'type0' },
+  { text: 'S \u2192 \u03b5 (S se nevyskytuje na prav\u00e9 stran\u011b)', correct: 'type3' },
+  { text: 'A \u2192 a', correct: 'type3' }
+];
+
+var types = [
+  { val: 'type3', label: 'Regul\u00e1rn\u00ed (typ 3)' },
+  { val: 'type2', label: 'Bezkontextov\u00e1 (typ 2)' },
+  { val: 'type1', label: 'Kontextov\u00e1 (typ 1)' },
+  { val: 'type0', label: 'Neomezen\u00e1 (typ 0)' }
+];
+
+var container = document.getElementById('cards');
+rules.forEach(function(r, i) {
+  var card = document.createElement('div');
+  card.className = 'card';
+  card.id = 'card-' + i;
+  var ruleDiv = document.createElement('div');
+  ruleDiv.className = 'rule';
+  ruleDiv.textContent = r.text;
+  card.appendChild(ruleDiv);
+  var opts = document.createElement('div');
+  opts.className = 'options';
+  types.forEach(function(t) {
+    var lbl = document.createElement('label');
+    var inp = document.createElement('input');
+    inp.type = 'radio';
+    inp.name = 'q' + i;
+    inp.value = t.val;
+    lbl.appendChild(inp);
+    lbl.appendChild(document.createTextNode(t.label));
+    opts.appendChild(lbl);
+  });
+  card.appendChild(opts);
+  container.appendChild(card);
+});
+
+function checkAnswers() {
+  var score = 0;
+  var total = rules.length;
+  rules.forEach(function(r, i) {
+    var card = document.getElementById('card-' + i);
+    card.classList.remove('card-correct','card-incorrect');
+    var sel = document.querySelector('input[name="q' + i + '"]:checked');
+    if (sel && sel.value === r.correct) {
+      card.classList.add('card-correct');
+      score++;
+    } else {
+      card.classList.add('card-incorrect');
+    }
+  });
+  var fb = document.getElementById('feedback');
+  if (score === total) {
+    fb.className = 'feedback correct';
+    fb.textContent = 'V\u00fdborn\u011b! V\u0161echny odpov\u011bdi jsou spr\u00e1vn\u00e9.';
+  } else {
+    fb.className = 'feedback incorrect';
+    fb.textContent = 'Chyba! Spr\u00e1vn\u011b: ' + score + '/' + total;
+  }
+}
+
+function resetAll() {
+  rules.forEach(function(r, i) {
+    var card = document.getElementById('card-' + i);
+    card.classList.remove('card-correct','card-incorrect');
+    document.querySelectorAll('input[name="q' + i + '"]').forEach(function(inp) { inp.checked = false; });
+  });
+  var fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.style.display = 'none';
+}
+
+/* iframe resize messaging */
+function sendHeight() {
+  var h = document.documentElement.scrollHeight;
+  window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
+}
+var ro = new ResizeObserver(sendHeight);
+ro.observe(document.body);
+window.addEventListener('load', sendHeight);
+</script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cvičení: Laboratoř regulárních výrazů</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
+}
+h2 { margin-bottom: 12px; font-size: 20px; }
+h3 { margin: 16px 0 8px; font-size: 16px; }
+.info-box {
+  background: #e7f3fe; border-left: 4px solid #2196F3; padding: 10px 14px;
+  margin-bottom: 16px; border-radius: 4px; font-size: 13px;
+}
+label { display: block; font-weight: 600; margin-bottom: 4px; }
+input[type="text"] {
+  width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;
+  font-size: 14px; font-family: monospace; margin-bottom: 12px;
+}
+textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;
+  font-size: 14px; font-family: monospace; min-height: 120px; margin-bottom: 12px;
+  resize: vertical;
+}
+.error { color: #721c24; background: #f8d7da; border: 1px solid #f5c6cb; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; display: none; }
+.btn {
+  background: #0f6cbf; color: #fff; border: none; padding: 8px 18px;
+  border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px;
+}
+.btn:hover { opacity: 0.9; }
+.btn-secondary { background: #6c757d; }
+.buttons { margin-bottom: 16px; }
+.badge-container { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 13px;
+  font-family: monospace;
+}
+.badge-match { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.badge-no { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.result-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.icon-ok { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #28a745; color: #fff; font-size: 13px; font-weight: 700; }
+.icon-fail { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #dc3545; color: #fff; font-size: 13px; font-weight: 700; }
+.word-mono { font-family: monospace; font-size: 14px; }
+#results, #genSection { display: none; }
+</style>
+</head>
+<body>
+<h2>Cvičení: Laboratoř regulárních výrazů</h2>
+
+<div class="info-box">Priorita operátorů: iterace (*) &gt; zřetězení (·) &gt; sjednocení (+)</div>
+
+<label for="regexInput">Formální regulární výraz:</label>
+<input type="text" id="regexInput" value="ab*+c">
+
+<div class="error" id="errorBox"></div>
+
+<label for="testWords">Testovací slova (jedno na řádek):</label>
+<textarea id="testWords">a
+ab
+abb
+abbb
+c
+ac
+bc
+ba</textarea>
+
+<div class="buttons">
+  <button class="btn" onclick="runTest()">Testovat výraz</button>
+  <button class="btn btn-secondary" onclick="resetAll()">Resetovat</button>
+</div>
+
+<div id="genSection">
+  <h3>Generovaná slova délky 0–5</h3>
+  <div class="badge-container" id="genWords"></div>
+</div>
+
+<div id="results">
+  <h3>Výsledky testování</h3>
+  <div id="resultList"></div>
+</div>
+
+<script>
+function formalToJS(formal) {
+  let s = formal.trim();
+  // ε → empty string
+  s = s.replace(/ε/g, '');
+  // + → | (union)
+  s = s.replace(/\+/g, '|');
+  // · removed (implicit concat handled by user writing letters next to each other)
+  s = s.replace(/·/g, '');
+  return '^(?:' + s + ')$';
+}
+
+function generateWords(maxLen) {
+  const alpha = ['a', 'b', 'c'];
+  const words = [''];
+  const queue = [''];
+  while (queue.length) {
+    const w = queue.shift();
+    if (w.length < maxLen) {
+      for (const ch of alpha) {
+        const nw = w + ch;
+        words.push(nw);
+        queue.push(nw);
+      }
+    }
+  }
+  words.sort((a, b) => a.length - b.length || a.localeCompare(b));
+  return words;
+}
+
+function runTest() {
+  const formal = document.getElementById('regexInput').value;
+  const errorBox = document.getElementById('errorBox');
+  errorBox.style.display = 'none';
+
+  let pattern;
+  try {
+    const jsPattern = formalToJS(formal);
+    pattern = new RegExp(jsPattern);
+  } catch (e) {
+    errorBox.textContent = 'Chyba v regulárním výrazu: ' + e.message;
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  // Generated words
+  const allWords = generateWords(5);
+  const genContainer = document.getElementById('genWords');
+  genContainer.innerHTML = '';
+  for (const w of allWords) {
+    const display = w === '' ? 'ε' : w;
+    const match = pattern.test(w);
+    const span = document.createElement('span');
+    span.className = 'badge ' + (match ? 'badge-match' : 'badge-no');
+    span.textContent = display;
+    genContainer.appendChild(span);
+  }
+  document.getElementById('genSection').style.display = 'block';
+
+  // Test words
+  const lines = document.getElementById('testWords').value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const resultList = document.getElementById('resultList');
+  resultList.innerHTML = '';
+  for (const word of lines) {
+    const testWord = word === 'ε' ? '' : word;
+    const match = pattern.test(testWord);
+    const div = document.createElement('div');
+    div.className = 'result-item';
+    div.innerHTML = '<span class="' + (match ? 'icon-ok' : 'icon-fail') + '">' + (match ? '✓' : '✗') + '</span><span class="word-mono">' + word + '</span>';
+    resultList.appendChild(div);
+  }
+  document.getElementById('results').style.display = 'block';
+}
+
+function resetAll() {
+  document.getElementById('regexInput').value = 'ab*+c';
+  document.getElementById('testWords').value = 'a\nab\nabb\nabbb\nc\nac\nbc\nba';
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('genSection').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+}
+
+// Iframe resize messaging
+function sendHeight() {
+  const h = document.documentElement.scrollHeight;
+  window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
+}
+const ro = new ResizeObserver(sendHeight);
+ro.observe(document.body);
+window.addEventListener('load', sendHeight);
+</script>
+</body>
+</html>

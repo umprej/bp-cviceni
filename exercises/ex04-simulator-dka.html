@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cvičení: Simulátor DKA — krokování</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
+}
+h2 { margin-bottom: 6px; font-size: 1.3em; }
+p.desc { margin-bottom: 16px; color: #555; }
+.btn { display: inline-block; cursor: pointer; border: none; color: #fff; border-radius: 4px; padding: 7px 16px; font-size: 14px; margin-right: 6px; margin-bottom: 6px; }
+.btn-primary { background: #0f6cbf; }
+.btn-primary:hover { background: #0d5da3; }
+.btn-secondary { background: #6c757d; }
+.btn-secondary:hover { background: #5a6268; }
+.btn-success { background: #28a745; }
+.btn-success:hover { background: #218838; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.feedback-correct { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 10px 14px; border-radius: 4px; margin-top: 10px; }
+.feedback-incorrect { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 10px 14px; border-radius: 4px; margin-top: 10px; }
+.section { background: #fff; border-radius: 6px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+svg text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
+.tape { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0; }
+.tape-cell { width: 34px; height: 34px; border: 2px solid #aaa; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; background: #fff; }
+.tape-cell.active { background: #0f6cbf; color: #fff; border-color: #0f6cbf; }
+.tape-cell.done { background: #b3d7ff; border-color: #80b8f0; color: #333; }
+.log { font-family: monospace; font-size: 13px; max-height: 160px; overflow-y: auto; }
+.log-entry { padding: 2px 0; }
+input[type=text] { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 180px; }
+.input-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.verdict { font-size: 1.1em; font-weight: 700; margin-top: 10px; padding: 10px 14px; border-radius: 4px; }
+.verdict.accept { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.verdict.reject { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.error-msg { color: #dc3545; font-size: 13px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<h2>Cvičení: Simulátor DKA — krokování</h2>
+<p class="desc">DFA přijímá slova nad abecedou {a, b} obsahující podřetězec "ab".</p>
+
+<div class="section">
+  <svg id="diagram" width="420" height="140" viewBox="0 0 420 140">
+    <!-- arrow into q0 -->
+    <defs><marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#333"/></marker></defs>
+    <line x1="10" y1="70" x2="45" y2="70" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+    <!-- q0 -->
+    <circle id="cq0" cx="80" cy="70" r="28" fill="#fff" stroke="#333" stroke-width="2"/>
+    <text x="80" y="75" text-anchor="middle" font-size="15" fill="#333">q&#x2080;</text>
+    <!-- q0 self-loop b -->
+    <path d="M68,44 C55,10 105,10 92,44" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+    <text x="80" y="18" text-anchor="middle" font-size="13" fill="#333">b</text>
+    <!-- q0 -> q1 a -->
+    <line x1="108" y1="70" x2="172" y2="70" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+    <text x="140" y="63" text-anchor="middle" font-size="13" fill="#333">a</text>
+    <!-- q1 -->
+    <circle id="cq1" cx="200" cy="70" r="28" fill="#fff" stroke="#333" stroke-width="2"/>
+    <text x="200" y="75" text-anchor="middle" font-size="15" fill="#333">q&#x2081;</text>
+    <!-- q1 self-loop a -->
+    <path d="M188,44 C175,10 225,10 212,44" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+    <text x="200" y="18" text-anchor="middle" font-size="13" fill="#333">a</text>
+    <!-- q1 -> q2 b -->
+    <line x1="228" y1="70" x2="292" y2="70" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+    <text x="260" y="63" text-anchor="middle" font-size="13" fill="#333">b</text>
+    <!-- q2 -->
+    <circle id="cq2" cx="320" cy="70" r="28" fill="#fff" stroke="#333" stroke-width="2"/>
+    <circle cx="320" cy="70" r="23" fill="none" stroke="#333" stroke-width="1.5"/>
+    <text x="320" y="75" text-anchor="middle" font-size="15" fill="#333">q&#x2082;</text>
+    <!-- q2 self-loop a,b -->
+    <path d="M308,44 C295,10 345,10 332,44" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+    <text x="320" y="18" text-anchor="middle" font-size="13" fill="#333">a, b</text>
+  </svg>
+</div>
+
+<div class="section">
+  <div class="input-row">
+    <label><strong>Vstupní slovo:</strong></label>
+    <input type="text" id="wordInput" value="abba" maxlength="20"/>
+    <button class="btn btn-primary" id="btnStep">Další krok</button>
+    <button class="btn btn-success" id="btnRunAll">Spustit vše</button>
+    <button class="btn btn-secondary" id="btnReset">Reset</button>
+  </div>
+  <div id="errorMsg" class="error-msg"></div>
+  <div id="tapeContainer" class="tape"></div>
+</div>
+
+<div class="section">
+  <strong>Historie přechodů:</strong>
+  <div id="log" class="log"></div>
+</div>
+
+<div id="verdictContainer"></div>
+
+<script>
+(function(){
+  const delta = {
+    'q0': { 'a': 'q1', 'b': 'q0' },
+    'q1': { 'a': 'q1', 'b': 'q2' },
+    'q2': { 'a': 'q2', 'b': 'q2' }
+  };
+  const accepting = new Set(['q2']);
+  const stateLabels = { 'q0': 'q\u2080', 'q1': 'q\u2081', 'q2': 'q\u2082' };
+
+  let word = '', pos = 0, currentState = 'q0', running = false;
+
+  const wordInput = document.getElementById('wordInput');
+  const tapeContainer = document.getElementById('tapeContainer');
+  const log = document.getElementById('log');
+  const verdictContainer = document.getElementById('verdictContainer');
+  const errorMsg = document.getElementById('errorMsg');
+  const btnStep = document.getElementById('btnStep');
+  const btnRunAll = document.getElementById('btnRunAll');
+  const btnReset = document.getElementById('btnReset');
+
+  function resize() {
+    parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
+  }
+
+  function highlightState(s) {
+    ['cq0','cq1','cq2'].forEach(id => {
+      document.getElementById(id).setAttribute('fill', id === 'c' + s ? '#ffe0b2' : '#fff');
+    });
+  }
+
+  function validate(w) {
+    if (w.length === 0) return 'Zadejte alespoň jeden symbol.';
+    if (w.length > 20) return 'Maximální délka je 20 znaků.';
+    if (!/^[ab]+$/.test(w)) return 'Povoleny jsou pouze symboly a, b.';
+    return '';
+  }
+
+  function buildTape() {
+    tapeContainer.innerHTML = '';
+    for (let i = 0; i < word.length; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'tape-cell';
+      cell.textContent = word[i];
+      cell.id = 'tc' + i;
+      tapeContainer.appendChild(cell);
+    }
+  }
+
+  function updateTape() {
+    for (let i = 0; i < word.length; i++) {
+      const cell = document.getElementById('tc' + i);
+      if (i < pos) cell.className = 'tape-cell done';
+      else if (i === pos) cell.className = 'tape-cell active';
+      else cell.className = 'tape-cell';
+    }
+  }
+
+  function init() {
+    const w = wordInput.value.trim();
+    const err = validate(w);
+    errorMsg.textContent = err;
+    if (err) return false;
+    word = w;
+    pos = 0;
+    currentState = 'q0';
+    running = true;
+    log.innerHTML = '';
+    verdictContainer.innerHTML = '';
+    buildTape();
+    updateTape();
+    highlightState('q0');
+    btnStep.disabled = false;
+    btnRunAll.disabled = false;
+    wordInput.disabled = true;
+    resize();
+    return true;
+  }
+
+  function step() {
+    if (pos >= word.length) { finish(); return; }
+    const sym = word[pos];
+    const prev = currentState;
+    currentState = delta[prev][sym];
+    pos++;
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.textContent = '\u03B4(' + stateLabels[prev] + ', ' + sym + ') = ' + stateLabels[currentState];
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+    updateTape();
+    highlightState(currentState);
+    if (pos >= word.length) finish();
+    resize();
+  }
+
+  function finish() {
+    running = false;
+    btnStep.disabled = true;
+    btnRunAll.disabled = true;
+    const acc = accepting.has(currentState);
+    verdictContainer.innerHTML = '<div class="verdict ' + (acc ? 'accept' : 'reject') + '">' +
+      (acc ? 'Slovo "' + word + '" je <strong>přijato</strong> (koncový stav ' + stateLabels[currentState] + ').'
+           : 'Slovo "' + word + '" je <strong>zamítnuto</strong> (stav ' + stateLabels[currentState] + ' není přijímající).') +
+      '</div>';
+    resize();
+  }
+
+  btnStep.addEventListener('click', function() {
+    if (!running && !init()) return;
+    step();
+  });
+
+  btnRunAll.addEventListener('click', function() {
+    if (!running && !init()) return;
+    while (pos < word.length) step();
+  });
+
+  btnReset.addEventListener('click', function() {
+    running = false;
+    wordInput.disabled = false;
+    btnStep.disabled = false;
+    btnRunAll.disabled = false;
+    log.innerHTML = '';
+    verdictContainer.innerHTML = '';
+    tapeContainer.innerHTML = '';
+    errorMsg.textContent = '';
+    highlightState('');
+    resize();
+  });
+
+  // initial sizing
+  window.addEventListener('load', resize);
+  new MutationObserver(resize).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+</body>
+</html>

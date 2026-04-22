@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cvičení: Sestavte tabulku přechodů</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
+}
+h2 { margin-bottom: 8px; }
+p.desc { margin-bottom: 16px; }
+table { border-collapse: collapse; margin-bottom: 16px; width: auto; }
+th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: center; }
+th { background: #f4f4f4; font-weight: 600; }
+td.state { font-weight: 600; text-align: left; white-space: nowrap; }
+select { padding: 4px 8px; font-size: 14px; }
+.btn { background: #0f6cbf; color: #fff; border: none; border-radius: 4px; padding: 7px 16px; cursor: pointer; font-size: 14px; margin-right: 8px; }
+.btn:hover { opacity: 0.9; }
+.btn-secondary { background: #6c757d; }
+.feedback { margin-top: 12px; padding: 10px 14px; border-radius: 4px; display: none; }
+.feedback.correct { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; display: block; }
+.feedback.incorrect { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; display: block; }
+td.cell-correct { background: #d4edda; }
+td.cell-incorrect { background: #f8d7da; }
+</style>
+</head>
+<body>
+<h2>Cvičení: Sestavte tabulku přechodů</h2>
+<p class="desc">Na základě DFA: A = ({q<sub>0</sub>, q<sub>1</sub>, q<sub>2</sub>}, {a, b}, &delta;, q<sub>0</sub>, {q<sub>2</sub>})</p>
+
+<table id="transTable">
+  <thead>
+    <tr><th>Stav</th><th>a</th><th>b</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="state">&rarr; q<sub>0</sub></td>
+      <td id="c-q0a"><select data-key="q0a"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+      <td id="c-q0b"><select data-key="q0b"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+    </tr>
+    <tr>
+      <td class="state">q<sub>1</sub></td>
+      <td id="c-q1a"><select data-key="q1a"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+      <td id="c-q1b"><select data-key="q1b"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+    </tr>
+    <tr>
+      <td class="state">&larr; q<sub>2</sub></td>
+      <td id="c-q2a"><select data-key="q2a"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+      <td id="c-q2b"><select data-key="q2b"><option value="">—</option><option value="q0">q₀</option><option value="q1">q₁</option><option value="q2">q₂</option></select></td>
+    </tr>
+  </tbody>
+</table>
+
+<button class="btn" onclick="checkAnswers()">Zkontrolovat</button>
+<button class="btn btn-secondary" onclick="resetAll()">Reset</button>
+
+<div id="feedback" class="feedback"></div>
+
+<script>
+const correct = { q0a:'q1', q0b:'q0', q1a:'q1', q1b:'q2', q2a:'q2', q2b:'q2' };
+
+function checkAnswers() {
+  let score = 0;
+  const selects = document.querySelectorAll('select[data-key]');
+  selects.forEach(function(sel) {
+    var key = sel.getAttribute('data-key');
+    var td = sel.parentElement;
+    td.classList.remove('cell-correct','cell-incorrect');
+    if (sel.value === correct[key]) {
+      td.classList.add('cell-correct');
+      score++;
+    } else {
+      td.classList.add('cell-incorrect');
+    }
+  });
+  var fb = document.getElementById('feedback');
+  if (score === 6) {
+    fb.className = 'feedback correct';
+    fb.textContent = 'Výborně! Všechny odpovědi jsou správné.';
+  } else {
+    fb.className = 'feedback incorrect';
+    fb.textContent = 'Chyba! Správně: ' + score + '/6';
+  }
+}
+
+function resetAll() {
+  document.querySelectorAll('select[data-key]').forEach(function(sel) {
+    sel.value = '';
+    sel.parentElement.classList.remove('cell-correct','cell-incorrect');
+  });
+  var fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.style.display = 'none';
+}
+
+/* iframe resize messaging */
+function sendHeight() {
+  var h = document.documentElement.scrollHeight;
+  window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
+}
+var ro = new ResizeObserver(sendHeight);
+ro.observe(document.body);
+window.addEventListener('load', sendHeight);
+</script>
+</body>
+</html>

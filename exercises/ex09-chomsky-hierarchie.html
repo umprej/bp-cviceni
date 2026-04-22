@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cvičení: Chomského hierarchie — seřazení</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
+}
+h2 { margin-bottom: 8px; font-size: 20px; }
+p.desc { margin-bottom: 16px; color: #555; }
+.sort-list { list-style: none; padding: 0; margin-bottom: 16px; max-width: 420px; }
+.sort-item {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 2px solid #dee2e6; border-radius: 6px;
+  padding: 10px 14px; margin-bottom: 8px; cursor: grab;
+  user-select: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.sort-item:active { cursor: grabbing; }
+.sort-item.dragging { opacity: 0.5; border-color: #0f6cbf; }
+.sort-item.drag-over { border-color: #0f6cbf; box-shadow: 0 0 0 2px rgba(15,108,191,0.25); }
+.num-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%; background: #0f6cbf;
+  color: #fff; font-weight: 700; font-size: 13px; flex-shrink: 0;
+}
+.item-label { font-size: 14px; font-weight: 500; }
+.buttons { margin-bottom: 16px; }
+.btn {
+  background: #0f6cbf; color: #fff; border: none; padding: 8px 18px;
+  border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px;
+}
+.btn:hover { opacity: 0.9; }
+.btn-secondary { background: #6c757d; }
+.feedback {
+  padding: 12px 16px; border-radius: 4px; margin-top: 4px; display: none;
+  font-size: 14px; border: 1px solid;
+}
+.feedback.correct { background: #d4edda; border-color: #c3e6cb; color: #155724; display: block; }
+.feedback.incorrect { background: #f8d7da; border-color: #f5c6cb; color: #721c24; display: block; }
+</style>
+</head>
+<body>
+<h2>Cvičení: Chomského hierarchie — seřazení</h2>
+<p class="desc">Seřaďte typy gramatik od nejzávislnějšího (nahoře) k nejobecnějšímu (dole):</p>
+
+<ul class="sort-list" id="sortList"></ul>
+
+<div class="buttons">
+  <button class="btn" onclick="checkOrder()">Zkontrolovat</button>
+  <button class="btn btn-secondary" onclick="resetOrder()">Resetovat</button>
+</div>
+
+<div class="feedback" id="feedback"></div>
+
+<script>
+const items = [
+  { id: 1, label: 'Typ 3 — Regulární' },
+  { id: 2, label: 'Typ 2 — Bezkontextová' },
+  { id: 3, label: 'Typ 1 — Kontextová' },
+  { id: 0, label: 'Typ 0 — Neomezená' }
+];
+
+// Initial shuffled order by indices: [3, 1, 0, 2]
+const initialOrder = [3, 1, 0, 2];
+// Correct id order top to bottom
+const correctIds = [1, 2, 3, 0];
+
+let currentOrder = [...initialOrder];
+
+function render() {
+  const list = document.getElementById('sortList');
+  list.innerHTML = '';
+  currentOrder.forEach((idx, pos) => {
+    const item = items[idx];
+    const li = document.createElement('li');
+    li.className = 'sort-item';
+    li.draggable = true;
+    li.dataset.pos = pos;
+    li.innerHTML = '<span class="num-badge">' + (pos + 1) + '</span><span class="item-label">' + item.label + '</span>';
+    li.addEventListener('dragstart', onDragStart);
+    li.addEventListener('dragend', onDragEnd);
+    li.addEventListener('dragover', onDragOver);
+    li.addEventListener('dragenter', onDragEnter);
+    li.addEventListener('dragleave', onDragLeave);
+    li.addEventListener('drop', onDrop);
+    // Touch support
+    li.addEventListener('touchstart', onTouchStart, { passive: false });
+    li.addEventListener('touchmove', onTouchMove, { passive: false });
+    li.addEventListener('touchend', onTouchEnd);
+    list.appendChild(li);
+  });
+}
+
+let dragIdx = null;
+
+function onDragStart(e) {
+  dragIdx = parseInt(e.currentTarget.dataset.pos);
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onDragEnd(e) { e.currentTarget.classList.remove('dragging'); dragIdx = null; }
+function onDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function onDragEnter(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const dropIdx = parseInt(e.currentTarget.dataset.pos);
+  if (dragIdx !== null && dragIdx !== dropIdx) {
+    const moved = currentOrder.splice(dragIdx, 1)[0];
+    currentOrder.splice(dropIdx, 0, moved);
+    render();
+  }
+}
+
+// Touch drag support
+let touchDragIdx = null;
+let touchClone = null;
+function onTouchStart(e) {
+  touchDragIdx = parseInt(e.currentTarget.dataset.pos);
+  e.currentTarget.classList.add('dragging');
+}
+function onTouchMove(e) {
+  e.preventDefault();
+}
+function onTouchEnd(e) {
+  if (touchDragIdx === null) return;
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const li = el ? el.closest('.sort-item') : null;
+  if (li) {
+    const dropIdx = parseInt(li.dataset.pos);
+    if (touchDragIdx !== dropIdx) {
+      const moved = currentOrder.splice(touchDragIdx, 1)[0];
+      currentOrder.splice(dropIdx, 0, moved);
+    }
+  }
+  touchDragIdx = null;
+  render();
+}
+
+function checkOrder() {
+  const fb = document.getElementById('feedback');
+  const ids = currentOrder.map(idx => items[idx].id);
+  const correct = ids.every((id, i) => id === correctIds[i]);
+  if (correct) {
+    fb.className = 'feedback correct';
+    fb.textContent = '✓ Správně! Pořadí Chomského hierarchie je správné.';
+  } else {
+    fb.className = 'feedback incorrect';
+    fb.textContent = '✗ Chybně. Zkuste znovu. Hint: Od nejrestriktivnější (Typ 3) k nejobecnější (Typ 0).';
+  }
+}
+
+function resetOrder() {
+  currentOrder = [...initialOrder];
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').style.display = 'none';
+  render();
+}
+
+render();
+
+// Iframe resize messaging
+function sendHeight() {
+  const h = document.documentElement.scrollHeight;
+  window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
+}
+const ro = new ResizeObserver(sendHeight);
+ro.observe(document.body);
+window.addEventListener('load', sendHeight);
+</script>
+</body>
+</html>

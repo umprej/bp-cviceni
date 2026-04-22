@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cvičení: Determinizace NKA — krokování</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
+}
+h2 { margin-bottom: 6px; font-size: 1.3em; }
+p.desc { margin-bottom: 16px; color: #555; }
+.btn { display: inline-block; cursor: pointer; border: none; color: #fff; border-radius: 4px; padding: 7px 16px; font-size: 14px; margin-right: 6px; }
+.btn-primary { background: #0f6cbf; }
+.btn-primary:hover { background: #0d5da3; }
+.btn-secondary { background: #6c757d; }
+.btn-secondary:hover { background: #5a6268; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.card { background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; }
+.step-header { background: #0f6cbf; color: #fff; padding: 10px 16px; font-weight: 600; font-size: 15px; }
+.step-body { padding: 18px 16px; font-family: monospace; font-size: 14px; white-space: pre-wrap; min-height: 120px; }
+.nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+.dots { display: flex; gap: 8px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: #ccc; }
+.dot.active { background: #0f6cbf; }
+</style>
+</head>
+<body>
+<h2>Cvičení: Determinizace NKA — krokování</h2>
+<p class="desc">Krokuje proces konverze nedeterministického automatu na deterministický pomocí konstrukce podmnožin.</p>
+
+<div class="card">
+  <div class="step-header" id="stepTitle"></div>
+  <div class="step-body" id="stepBody"></div>
+</div>
+
+<div class="nav-row">
+  <button class="btn btn-secondary" id="btnBack">Zpět</button>
+  <div class="dots" id="dots"></div>
+  <button class="btn btn-primary" id="btnNext">Dál</button>
+</div>
+
+<script>
+(function(){
+  var steps = [
+    { title: 'Krok 1: Počáteční stav DKA', body: 'Počátečním stavem DKA je množina obsahující počáteční stav NKA.\n\n{q\u2080}' },
+    { title: 'Krok 2: Přechody z {q\u2080}', body: 'Z množiny {q\u2080} počítáme přechody:\n\n\u03B4\u2019({q\u2080}, a) = {q\u2080, q\u2081}\n\u03B4\u2019({q\u2080}, b) = \u2205\n\nNový stav: {q\u2080, q\u2081}' },
+    { title: 'Krok 3: Přechody z {q\u2080, q\u2081}', body: 'Z množiny {q\u2080, q\u2081} počítáme přechody:\n\n\u03B4\u2019({q\u2080, q\u2081}, a) = {q\u2080, q\u2081}\n\u03B4\u2019({q\u2080, q\u2081}, b) = {q\u2082}\n\nNový stav: {q\u2082}' },
+    { title: 'Krok 4: Přechody z {q\u2082}', body: 'Z množiny {q\u2082} počítáme přechody:\n\n\u03B4\u2019({q\u2082}, a) = \u2205\n\u03B4\u2019({q\u2082}, b) = \u2205\n\nŽádné nové stavy.' },
+    { title: 'Krok 5: Výsledný DKA', body: 'Vytvořili jsme DKA se stavy:\n\n{q\u2080}, {q\u2080, q\u2081}, {q\u2082}\n\nPřijímajícím stavem je {q\u2082}.' }
+  ];
+
+  var current = 0;
+  var titleEl = document.getElementById('stepTitle');
+  var bodyEl = document.getElementById('stepBody');
+  var dotsEl = document.getElementById('dots');
+  var btnBack = document.getElementById('btnBack');
+  var btnNext = document.getElementById('btnNext');
+
+  function resize() {
+    parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
+  }
+
+  // build dots
+  for (var i = 0; i < steps.length; i++) {
+    var d = document.createElement('div');
+    d.className = 'dot';
+    dotsEl.appendChild(d);
+  }
+
+  function render() {
+    titleEl.textContent = steps[current].title;
+    bodyEl.textContent = steps[current].body;
+    btnBack.disabled = current === 0;
+    btnNext.disabled = current === steps.length - 1;
+    var dots = dotsEl.children;
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].className = i === current ? 'dot active' : 'dot';
+    }
+    resize();
+  }
+
+  btnBack.addEventListener('click', function() { if (current > 0) { current--; render(); } });
+  btnNext.addEventListener('click', function() { if (current < steps.length - 1) { current++; render(); } });
+
+  render();
+  window.addEventListener('load', resize);
+})();
+</script>
+</body>
+</html>

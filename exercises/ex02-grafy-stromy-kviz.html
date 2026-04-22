@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cvičení: Grafy a stromy — kvíz</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
+  }
+  h1 { font-size: 1.4em; margin-bottom: 6px; }
+  .description { margin-bottom: 18px; color: #555; }
+  .card {
+    background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 20px; margin-bottom: 16px;
+  }
+  .question-num { font-weight: 700; color: #0f6cbf; margin-bottom: 4px; }
+  .question-text { margin-bottom: 10px; font-style: italic; }
+  .options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+  .option {
+    background: #f0f0f0; border: 2px solid #ccc; border-radius: 4px; padding: 7px 16px;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s; user-select: none;
+  }
+  .option:hover { border-color: #0f6cbf; background: #e8f0fe; }
+  .option.selected { border-color: #0f6cbf; background: #d6e8fa; font-weight: 600; }
+  .option.correct-highlight { border-color: #28a745; background: #d4edda; }
+  .option.incorrect-highlight { border-color: #dc3545; background: #f8d7da; }
+  .q-feedback {
+    margin-top: 6px; padding: 6px 10px; border-radius: 4px; font-size: 0.9em; display: none;
+  }
+  .q-feedback.correct {
+    display: block; background: #d4edda; border: 1px solid #c3e6cb; color: #155724;
+  }
+  .q-feedback.incorrect {
+    display: block; background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24;
+  }
+  .buttons { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    background: #0f6cbf; color: #fff; border: none; padding: 10px 22px;
+    border-radius: 4px; cursor: pointer; font-size: 14px;
+  }
+  .btn:hover { background: #0d5da3; }
+  .btn-reset { background: #6c757d; }
+  .btn-reset:hover { background: #5a6268; }
+  .feedback {
+    margin-top: 14px; padding: 12px 16px; border-radius: 4px; display: none;
+  }
+  .feedback.correct {
+    display: block; background: #d4edda; border: 1px solid #c3e6cb; color: #155724;
+  }
+  .feedback.incorrect {
+    display: block; background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24;
+  }
+</style>
+</head>
+<body>
+
+<h1>Cvičení: Grafy a stromy — kvíz</h1>
+<p class="description">Vyberte správnou odpověď u každé otázky a poté klikněte na tlačítko Zkontrolovat.</p>
+
+<div id="quiz"></div>
+
+<div class="buttons">
+  <button class="btn" id="checkBtn">Zkontrolovat</button>
+  <button class="btn btn-reset" id="resetBtn">Resetovat</button>
+</div>
+
+<div class="feedback" id="feedback"></div>
+
+<script>
+(function() {
+  var questions = [
+    {
+      text: 'Hrany grafu jsou uspořádané dvojice (u, v), směr je důležitý.',
+      options: ['orientovaný', 'neorientovaný'],
+      correct: 'orientovaný'
+    },
+    {
+      text: 'Mezi každými dvěma vrcholy existuje právě jedna cesta a neexistují cykly.',
+      options: ['strom', 'obecný graf'],
+      correct: 'strom'
+    },
+    {
+      text: 'Hrana z vrcholu u do sebe samého (u, u).',
+      options: ['smyčka', 'most', 'cesta'],
+      correct: 'smyčka'
+    },
+    {
+      text: 'Počet hran směřujících do vrcholu v orientovaném grafu.',
+      options: ['vstupní stupeň', 'výstupní stupeň', 'kardinalita'],
+      correct: 'vstupní stupeň'
+    }
+  ];
+
+  var selected = {};
+  var quizEl = document.getElementById('quiz');
+  var feedbackEl = document.getElementById('feedback');
+
+  function buildUI() {
+    quizEl.innerHTML = '';
+    selected = {};
+    feedbackEl.className = 'feedback';
+    feedbackEl.style.display = 'none';
+
+    questions.forEach(function(q, qi) {
+      var card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = '<div class="question-num">Otázka ' + (qi + 1) + '</div>' +
+        '<div class="question-text">' + q.text + '</div>';
+
+      var optionsDiv = document.createElement('div');
+      optionsDiv.className = 'options';
+      q.options.forEach(function(opt) {
+        var btn = document.createElement('div');
+        btn.className = 'option';
+        btn.textContent = opt;
+        btn.addEventListener('click', function() {
+          // Remove old selection highlight but not correct/incorrect highlights
+          optionsDiv.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('selected');
+          });
+          btn.classList.add('selected');
+          selected[qi] = opt;
+        });
+        optionsDiv.appendChild(btn);
+      });
+      card.appendChild(optionsDiv);
+
+      var fb = document.createElement('div');
+      fb.className = 'q-feedback';
+      fb.id = 'qfb-' + qi;
+      card.appendChild(fb);
+
+      quizEl.appendChild(card);
+    });
+    sendHeight();
+  }
+
+  document.getElementById('checkBtn').addEventListener('click', function() {
+    var allCorrect = true;
+    var allAnswered = true;
+
+    questions.forEach(function(q, qi) {
+      var fb = document.getElementById('qfb-' + qi);
+      var card = quizEl.children[qi];
+      var options = card.querySelectorAll('.option');
+
+      // Reset highlights
+      options.forEach(function(o) {
+        o.classList.remove('correct-highlight', 'incorrect-highlight');
+      });
+
+      if (selected[qi] === undefined) {
+        allAnswered = false;
+        allCorrect = false;
+        fb.className = 'q-feedback incorrect';
+        fb.textContent = 'Vyberte odpověď.';
+        return;
+      }
+
+      if (selected[qi] === q.correct) {
+        fb.className = 'q-feedback correct';
+        fb.textContent = 'Správně!';
+        options.forEach(function(o) {
+          if (o.textContent === q.correct) o.classList.add('correct-highlight');
+        });
+      } else {
+        allCorrect = false;
+        fb.className = 'q-feedback incorrect';
+        fb.textContent = 'Nesprávně. Správná odpověď: ' + q.correct + '.';
+        options.forEach(function(o) {
+          if (o.textContent === selected[qi]) o.classList.add('incorrect-highlight');
+          if (o.textContent === q.correct) o.classList.add('correct-highlight');
+        });
+      }
+    });
+
+    feedbackEl.className = 'feedback ' + (allCorrect ? 'correct' : 'incorrect');
+    feedbackEl.style.display = 'block';
+    feedbackEl.textContent = allCorrect
+      ? 'Výborně! Všechny odpovědi jsou správné.'
+      : (allAnswered ? 'Některé odpovědi nejsou správné. Zkuste to znovu.' : 'Odpovězte na všechny otázky.');
+    sendHeight();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    buildUI();
+  });
+
+  function sendHeight() {
+    requestAnimationFrame(function() {
+      var h = document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
+    });
+  }
+
+  buildUI();
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+})();
+</script>
+</body>
+</html>
