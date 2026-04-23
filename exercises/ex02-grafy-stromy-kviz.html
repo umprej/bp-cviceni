@@ -210,8 +210,9 @@ function hasEdgeBetween(a, b) {
 
 // Vykresleni hran jako SVG cary
 function renderEdges() {
-  // smazat vsechny cary krome <defs>
-  while (edgeSvg.childNodes.length > 1) edgeSvg.removeChild(edgeSvg.lastChild);
+  // smazat vsechny cary krome <defs> (pouzivame children misto childNodes,
+  // protoze childNodes obsahuje i textove uzly a smazalo by to i defs)
+  while (edgeSvg.children.length > 1) edgeSvg.removeChild(edgeSvg.lastElementChild);
   edges.forEach(function(e, idx) {
     var nf = nodes.find(function(n) { return n.id === e.from; });
     var nt = nodes.find(function(n) { return n.id === e.to; });
