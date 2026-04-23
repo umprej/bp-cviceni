@@ -3,90 +3,214 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cvičení: Mealyho vs. Moorův automat</title>
+<title>Cvičení: Mealy/Moore — simulátor výstupu</title>
+<link rel="stylesheet" href="exercises.css">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
-}
-h2 { margin-bottom: 6px; font-size: 1.3em; }
-p.desc { margin-bottom: 16px; color: #555; }
-.btn { display: inline-block; cursor: pointer; border: none; color: #fff; border-radius: 4px; padding: 7px 16px; font-size: 14px; margin-right: 6px; }
-.btn-primary { background: #0f6cbf; }
-.btn-primary:hover { background: #0d5da3; }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-.question { background: #fff; border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-.question .label { font-family: monospace; font-size: 15px; margin-bottom: 10px; font-weight: 600; }
-.feedback { padding: 8px 12px; border-radius: 4px; margin-top: 8px; font-size: 13px; }
-.feedback.correct { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
-.feedback.incorrect { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-.summary { background: #fff; border-radius: 6px; padding: 16px; margin-top: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08); font-size: 1.1em; font-weight: 600; }
+.sim-area { margin-top: 12px; }
+.input-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.input-btns span { font-size: 13px; color: #555; }
+.labels-row { display: flex; gap: 4px; font-size: 11px; color: #888; margin-bottom: 4px; }
+.explanation { margin-top: 10px; padding: 10px 14px; background: #fff3cd; border: 1px solid #ffc107;
+  border-radius: 4px; font-size: 13px; color: #856404; }
+table.data td.highlight { background: #fff3cd; }
 </style>
 </head>
 <body>
-<h2>Cvičení: Mealyho vs. Moorův automat</h2>
-<p class="desc">Určete, zda se jedná o Mealyho nebo Moorův automat.</p>
+<h2>Cvičení: Mealy/Moore — simulátor výstupu</h2>
+<p class="desc">Zadávejte vstupní symboly a pozorujte, jak automat produkuje výstup. Přepínejte mezi Mealyho a Moorovým automatem.</p>
 
-<div id="questions"></div>
-<div id="summary"></div>
+<div class="section">
+  <h3>Úloha: Detektor parity (počet jedniček sudý/lichý)</h3>
+  <p class="automaton-desc">
+    Abeceda: <code>{0, 1}</code> &nbsp;|&nbsp;
+    Výstup: <code>S</code> (sudý počet 1) / <code>L</code> (lichý počet 1)
+  </p>
+
+  <div class="tabs">
+    <div class="tab active" id="tabMealy" onclick="switchMode('mealy')">Mealyho automat</div>
+    <div class="tab" id="tabMoore" onclick="switchMode('moore')">Moorův automat</div>
+  </div>
+
+  <div id="mealyInfo">
+    <p class="automaton-desc">Výstup je přiřazen <strong>přechodům</strong> (závisí na stavu + vstupu).</p>
+    <table class="data" id="mealyTable">
+      <tr><th>δ / λ</th><th>0</th><th>1</th></tr>
+      <tr><td><strong>S</strong> (sudý)</td><td>S / S</td><td>L / L</td></tr>
+      <tr><td><strong>L</strong> (lichý)</td><td>L / L</td><td>S / S</td></tr>
+    </table>
+    <p class="automaton-desc" style="font-size:12px; color:#999;">Formát: další stav / výstup</p>
+  </div>
+
+  <div id="mooreInfo" style="display:none;">
+    <p class="automaton-desc">Výstup je přiřazen <strong>stavům</strong> (závisí pouze na stavu).</p>
+    <table class="data" id="mooreTable">
+      <tr><th>δ</th><th>0</th><th>1</th><th>Výstup λ</th></tr>
+      <tr><td><strong>S</strong> (sudý)</td><td>S</td><td>L</td><td>S</td></tr>
+      <tr><td><strong>L</strong> (lichý)</td><td>L</td><td>S</td><td>L</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Simulace</h3>
+  <div class="input-btns">
+    <span>Vstup:</span>
+    <button class="sym-btn" onclick="feedSymbol('0')">0</button>
+    <button class="sym-btn" onclick="feedSymbol('1')">1</button>
+    <button class="btn btn-secondary" onclick="resetSim()">Reset</button>
+  </div>
+
+  <div class="sim-area">
+    <div id="stepDisplay"></div>
+    <div class="summary-row" id="summaryRow"></div>
+  </div>
+
+  <div class="comparison" id="comparisonArea"></div>
+</div>
+
+<div class="explanation">
+  <strong>Klíčový rozdíl:</strong> Mealyho automat produkuje výstup při každém přechodu — výstupní řetězec má stejnou délku jako vstupní.
+  Moorův automat produkuje výstup při vstupu do stavu — výstupní řetězec je o 1 delší (zahrnuje počáteční stav).
+</div>
 
 <script>
-(function(){
-  var questions = [
-    { text: '\u03BB: Q \u00D7 \u03A3 \u2192 O', answer: 'Mealy', explanation: 'Výstupní funkce závisí na aktuálním stavu a vstupním symbolu' },
-    { text: '\u03BB: Q \u2192 O', answer: 'Moore', explanation: 'Výstupní funkce závisí výhradně na stavu' },
-    { text: 'Délka výstupního řetězce = délka vstupního řetězce', answer: 'Mealy', explanation: 'Výstup se produkuje během každého přechodu' },
-    { text: 'Délka výstupního řetězce = (délka vstupního) + 1', answer: 'Moore', explanation: 'Výstup se produkuje při vstupu do stavů, včetně počátečního' },
-    { text: 'Výstup se produkuje při vstupu do stavu', answer: 'Moore', explanation: 'Výstup je asociován se stavem' },
-    { text: 'Výstup se produkuje během přechodu', answer: 'Mealy', explanation: 'Výstup je asociován se přechodem a vstupním symbolem' }
-  ];
+(function() {
+  var mealyDelta = {
+    'S': { '0': { next: 'S', out: 'S' }, '1': { next: 'L', out: 'L' } },
+    'L': { '0': { next: 'L', out: 'L' }, '1': { next: 'S', out: 'S' } }
+  };
 
-  var score = 0, answered = 0;
-  var container = document.getElementById('questions');
-  var summaryEl = document.getElementById('summary');
+  var mooreDelta = {
+    'S': { '0': 'S', '1': 'L' },
+    'L': { '0': 'L', '1': 'S' }
+  };
+  var mooreOutput = { 'S': 'S', 'L': 'L' };
+
+  var mode = 'mealy'; // or 'moore'
+  var inputSeq = [];
+  var mealyStates = ['S'];
+  var mealyOutputs = [];
+  var mooreStates = ['S'];
+  var mooreOutputs = ['S']; // initial state output
 
   function resize() {
     parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
   }
 
-  questions.forEach(function(q, i) {
-    var div = document.createElement('div');
-    div.className = 'question';
-    div.innerHTML = '<div class="label">' + (i + 1) + '. ' + q.text + '</div>' +
-      '<button class="btn btn-primary" data-q="' + i + '" data-val="Mealy">Mealy</button>' +
-      '<button class="btn btn-primary" data-q="' + i + '" data-val="Moore">Moore</button>' +
-      '<div id="fb' + i + '"></div>';
-    container.appendChild(div);
-  });
-
-  container.addEventListener('click', function(e) {
-    var btn = e.target;
-    if (!btn.dataset.q) return;
-    var idx = parseInt(btn.dataset.q);
-    var fbEl = document.getElementById('fb' + idx);
-    if (fbEl.innerHTML) return;
-
-    var chosen = btn.dataset.val;
-    var correct = questions[idx].answer === chosen;
-    if (correct) score++;
-    answered++;
-
-    var btns = btn.parentElement.querySelectorAll('button');
-    btns.forEach(function(b) { b.disabled = true; });
-
-    fbEl.innerHTML = '<div class="feedback ' + (correct ? 'correct' : 'incorrect') + '">' +
-      (correct ? '\u2713 Správně!' : '\u2717 Špatně. Správná odpověď: ' + questions[idx].answer) +
-      ' \u2014 ' + questions[idx].explanation + '</div>';
-
-    if (answered === questions.length) {
-      summaryEl.innerHTML = '<div class="summary">Výsledek: ' + score + '/' + questions.length + ' správných odpovědí</div>';
-    }
+  function switchMode(m) {
+    mode = m;
+    document.getElementById('tabMealy').className = 'tab' + (m === 'mealy' ? ' active' : '');
+    document.getElementById('tabMoore').className = 'tab' + (m === 'moore' ? ' active' : '');
+    document.getElementById('mealyInfo').style.display = m === 'mealy' ? '' : 'none';
+    document.getElementById('mooreInfo').style.display = m === 'moore' ? '' : 'none';
+    render();
     resize();
-  });
+  }
+  window.switchMode = switchMode;
 
-  window.addEventListener('load', resize);
-  new MutationObserver(resize).observe(document.body, { childList: true, subtree: true });
+  function feedSymbol(sym) {
+    inputSeq.push(sym);
+
+    // Mealy step
+    var mCur = mealyStates[mealyStates.length - 1];
+    var mTrans = mealyDelta[mCur][sym];
+    mealyStates.push(mTrans.next);
+    mealyOutputs.push(mTrans.out);
+
+    // Moore step
+    var oCur = mooreStates[mooreStates.length - 1];
+    var oNext = mooreDelta[oCur][sym];
+    mooreStates.push(oNext);
+    mooreOutputs.push(mooreOutput[oNext]);
+
+    render();
+    resize();
+  }
+  window.feedSymbol = feedSymbol;
+
+  function resetSim() {
+    inputSeq = [];
+    mealyStates = ['S'];
+    mealyOutputs = [];
+    mooreStates = ['S'];
+    mooreOutputs = ['S'];
+    render();
+    resize();
+  }
+  window.resetSim = resetSim;
+
+  function render() {
+    var states = mode === 'mealy' ? mealyStates : mooreStates;
+    var outputs = mode === 'mealy' ? mealyOutputs : mooreOutputs;
+
+    var html = '';
+    if (inputSeq.length === 0) {
+      var initState = states[0];
+      html += '<div style="color:#888; font-size:13px;">Počáteční stav: <strong>' + initState + '</strong>';
+      if (mode === 'moore') {
+        html += ' → výstup: <strong>' + mooreOutput[initState] + '</strong> (Moorův automat produkuje výstup i v počátečním stavu)';
+      }
+      html += '</div>';
+    } else {
+      html += '<div class="output-display">';
+      // For Moore, show initial state output
+      if (mode === 'moore') {
+        html += '<div class="step-box">';
+        html += '<div class="step-state">start</div>';
+        html += '<div class="step-output">' + mooreOutputs[0] + '</div>';
+        html += '</div>';
+      }
+      for (var i = 0; i < inputSeq.length; i++) {
+        if (mode === 'moore' || i > 0) {
+          html += '<div class="step-arrow">→</div>';
+        }
+        html += '<div class="step-box">';
+        html += '<div class="step-state">' + states[i] + '→' + states[i + 1] + '</div>';
+        html += '<div class="step-input">' + inputSeq[i] + '</div>';
+        if (mode === 'mealy') {
+          html += '<div class="step-output">' + mealyOutputs[i] + '</div>';
+        } else {
+          html += '<div class="step-output">' + mooreOutputs[i + 1] + '</div>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+    document.getElementById('stepDisplay').innerHTML = html;
+
+    // Summary
+    var sumHtml = '';
+    if (inputSeq.length > 0) {
+      sumHtml += '<div class="summary-item"><strong>Vstup:</strong> ' + inputSeq.join('') + '</div>';
+      if (mode === 'mealy') {
+        sumHtml += '<div class="summary-item"><strong>Výstup (Mealy):</strong> ' + mealyOutputs.join('') +
+          ' <span style="color:#888; font-size:11px;">(délka = ' + mealyOutputs.length + ')</span></div>';
+      } else {
+        sumHtml += '<div class="summary-item"><strong>Výstup (Moore):</strong> ' + mooreOutputs.join('') +
+          ' <span style="color:#888; font-size:11px;">(délka = ' + mooreOutputs.length + ')</span></div>';
+      }
+    }
+    document.getElementById('summaryRow').innerHTML = sumHtml;
+
+    // Comparison (always show both)
+    var compHtml = '';
+    if (inputSeq.length > 0) {
+      compHtml += '<div class="comp-card mealy"><h4>Mealyho automat</h4>';
+      compHtml += '<div style="font-size:12px;">Výstup při přechodech</div>';
+      compHtml += '<div class="out">' + inputSeq.join('') + ' → ' + mealyOutputs.join('') + '</div>';
+      compHtml += '<div style="font-size:11px; color:#888; margin-top:4px;">Délka výstupu = délka vstupu = ' + inputSeq.length + '</div></div>';
+
+      compHtml += '<div class="comp-card moore"><h4>Moorův automat</h4>';
+      compHtml += '<div style="font-size:12px;">Výstup ze stavů (včetně počátečního)</div>';
+      compHtml += '<div class="out">' + inputSeq.join('') + ' → ' + mooreOutputs.join('') + '</div>';
+      compHtml += '<div style="font-size:11px; color:#888; margin-top:4px;">Délka výstupu = délka vstupu + 1 = ' + mooreOutputs.length + '</div></div>';
+    }
+    document.getElementById('comparisonArea').innerHTML = compHtml;
+  }
+
+  render();
+  new ResizeObserver(function() { resize(); }).observe(document.documentElement);
+  resize();
 })();
 </script>
 </body>

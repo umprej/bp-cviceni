@@ -3,91 +3,229 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cvičení: DKA vs. NKA — klasifikace</title>
+<title>Cvičení: NKA — vizualizace paralelních výpočtů</title>
+<link rel="stylesheet" href="exercises.css">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
-}
-h2 { margin-bottom: 6px; font-size: 1.3em; }
-p.desc { margin-bottom: 16px; color: #555; }
-.btn { display: inline-block; cursor: pointer; border: none; color: #fff; border-radius: 4px; padding: 7px 16px; font-size: 14px; margin-right: 6px; }
-.btn-primary { background: #0f6cbf; }
-.btn-primary:hover { background: #0d5da3; }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-.question { background: #fff; border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-.question .label { font-family: monospace; font-size: 15px; margin-bottom: 10px; font-weight: 600; }
-.feedback { padding: 8px 12px; border-radius: 4px; margin-top: 8px; font-size: 13px; }
-.feedback.correct { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
-.feedback.incorrect { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-.summary { background: #fff; border-radius: 6px; padding: 16px; margin-top: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08); font-size: 1.1em; font-weight: 600; }
+.explanation { margin-top: 10px; padding: 10px 14px; background: #fff3cd; border: 1px solid #ffc107;
+  border-radius: 4px; font-size: 13px; color: #856404; }
 </style>
 </head>
 <body>
-<h2>Cvičení: DKA vs. NKA — klasifikace</h2>
-<p class="desc">Určete, zda se jedná o deterministický (DKA) nebo nedeterministický (NKA) automat.</p>
+<h2>Cvičení: NKA — vizualizace paralelních výpočtů</h2>
+<p class="desc">Pozorujte, jak nedeterministický automat zpracovává slovo — výpočet se větví do paralelních cest. Stačí, aby <strong>jedna</strong> větev skončila v koncovém stavu.</p>
 
-<div id="questions"></div>
-<div id="summary"></div>
+<div class="section">
+  <h3>NKA přijímající slova končící na „ab"</h3>
+  <p class="automaton-desc">
+    Stavy: <code>q₀, q₁, q₂</code> &nbsp;|&nbsp;
+    Abeceda: <code>{a, b}</code> &nbsp;|&nbsp;
+    Počáteční: <code>q₀</code> &nbsp;|&nbsp;
+    Koncový: <code>q₂</code>
+  </p>
+  <svg id="diagram" width="420" height="130" viewBox="0 0 420 130">
+    <defs><marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#333"/></marker></defs>
+    <line x1="10" y1="65" x2="42" y2="65" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+    <circle cx="72" cy="65" r="26" fill="#fff" stroke="#333" stroke-width="2"/>
+    <text x="72" y="70" text-anchor="middle" font-size="14" fill="#333">q₀</text>
+    <path d="M60,41 C47,7 97,7 84,41" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+    <text x="72" y="14" text-anchor="middle" font-size="12" fill="#333">a, b</text>
+    <line x1="98" y1="65" x2="174" y2="65" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+    <text x="136" y="58" text-anchor="middle" font-size="12" fill="#333">a</text>
+    <circle cx="200" cy="65" r="26" fill="#fff" stroke="#333" stroke-width="2"/>
+    <text x="200" y="70" text-anchor="middle" font-size="14" fill="#333">q₁</text>
+    <line x1="226" y1="65" x2="302" y2="65" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+    <text x="264" y="58" text-anchor="middle" font-size="12" fill="#333">b</text>
+    <circle cx="328" cy="65" r="26" fill="#fff" stroke="#333" stroke-width="2"/>
+    <circle cx="328" cy="65" r="21" fill="none" stroke="#333" stroke-width="1.5"/>
+    <text x="328" y="70" text-anchor="middle" font-size="14" fill="#333">q₂</text>
+  </svg>
+
+  <table class="data">
+    <tr><th>δ</th>
+        <th>a</th>
+        <th>b</th></tr>
+    <tr><td style="font-weight:600;">q₀</td>
+        <td>{q₀, q₁}</td>
+        <td>{q₀}</td></tr>
+    <tr><td style="font-weight:600;">q₁</td>
+        <td>∅</td>
+        <td>{q₂}</td></tr>
+    <tr><td style="font-weight:600;">q₂</td>
+        <td>∅</td>
+        <td>∅</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>Simulace</h3>
+  <div class="input-row">
+    <input type="text" id="wordInput" placeholder="např. aab" maxlength="12">
+    <button class="btn btn-primary" id="startBtn" onclick="startSim()">Spustit</button>
+    <button class="btn btn-success" id="stepBtn" onclick="stepSim()" disabled>Krok →</button>
+    <button class="btn btn-secondary" id="runAllBtn" onclick="runAll()" disabled>Spustit celé</button>
+    <button class="btn btn-secondary" onclick="resetSim()">Reset</button>
+  </div>
+  <div class="presets">
+    <span>Zkuste:</span>
+    <button class="btn btn-secondary" onclick="tryWord('ab')">ab</button>
+    <button class="btn btn-secondary" onclick="tryWord('aab')">aab</button>
+    <button class="btn btn-secondary" onclick="tryWord('bb')">bb</button>
+    <button class="btn btn-secondary" onclick="tryWord('abab')">abab</button>
+    <button class="btn btn-secondary" onclick="tryWord('ba')">ba</button>
+  </div>
+  <div class="tape" id="tape"></div>
+  <div id="tree"></div>
+  <div id="verdict"></div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#0f6cbf;"></div> Aktivní větev</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#dc3545;"></div> Mrtvá větev (uvízla)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#28a745;"></div> Přijímající větev</div>
+  </div>
+</div>
+
+<div class="explanation">
+  <strong>Klíčový rozdíl DKA vs. NKA:</strong> V DKA existuje pro každý vstup právě jedna cesta.
+  V NKA se výpočet větví — automat „hádá" správnou cestu. Slovo je přijato, pokud <em>alespoň jedna</em> větev skončí v koncovém stavu.
+</div>
 
 <script>
-(function(){
-  const questions = [
-    { text: '\u03B4(q\u2080, a) = q\u2081', answer: 'DKA', explanation: 'Pro každý stav a symbol existuje právě jeden přechod' },
-    { text: '\u03B4(q\u2080, a) = {q\u2081, q\u2082}', answer: 'NKA', explanation: 'Z jednoho stavu vede pro symbol více přechodů' },
-    { text: '\u03B4(q\u2081, \u03B5) = {q\u2082}', answer: 'NKA', explanation: 'Přechod bez čtení symbolu (epsilon-přechod)' },
-    { text: '\u03B4: Q \u00D7 \u03A3 \u2192 P(Q)', answer: 'NKA', explanation: 'Přechodová funkce vrací množinu stavů' },
-    { text: '\u03B4: Q \u00D7 \u03A3 \u2192 Q', answer: 'DKA', explanation: 'Přechodová funkce vrací právě jeden stav' },
-    { text: 'Automat má více počátečních stavů I \u2286 Q', answer: 'NKA', explanation: 'Více počátečních stavů umožňují nedeterminismus' }
-  ];
+(function() {
+  var delta = {
+    'q0': { 'a': ['q0', 'q1'], 'b': ['q0'] },
+    'q1': { 'a': [], 'b': ['q2'] },
+    'q2': { 'a': [], 'b': [] }
+  };
+  var accepting = { 'q2': true };
+  var labels = { 'q0': 'q\u2080', 'q1': 'q\u2081', 'q2': 'q\u2082' };
 
-  let score = 0, answered = 0;
-  const container = document.getElementById('questions');
-  const summaryEl = document.getElementById('summary');
+  var word = '', step = 0;
+  var activeSets = []; // activeSets[i] = array of states after reading i symbols
+  var running = false;
 
   function resize() {
     parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
   }
 
-  questions.forEach(function(q, i) {
-    const div = document.createElement('div');
-    div.className = 'question';
-    div.innerHTML = '<div class="label">' + (i + 1) + '. ' + q.text + '</div>' +
-      '<button class="btn btn-primary" data-q="' + i + '" data-val="DKA">DKA</button>' +
-      '<button class="btn btn-primary" data-q="' + i + '" data-val="NKA">NKA</button>' +
-      '<div id="fb' + i + '"></div>';
-    container.appendChild(div);
-  });
+  function tryWord(w) {
+    document.getElementById('wordInput').value = w;
+    startSim();
+  }
+  window.tryWord = tryWord;
 
-  container.addEventListener('click', function(e) {
-    const btn = e.target;
-    if (!btn.dataset.q) return;
-    const idx = parseInt(btn.dataset.q);
-    const fbEl = document.getElementById('fb' + idx);
-    if (fbEl.innerHTML) return; // already answered
+  function startSim() {
+    word = document.getElementById('wordInput').value.replace(/[^ab]/g, '');
+    if (!word) { document.getElementById('wordInput').focus(); return; }
+    document.getElementById('wordInput').value = word;
+    step = 0;
+    activeSets = [['q0']];
+    running = true;
+    document.getElementById('stepBtn').disabled = false;
+    document.getElementById('runAllBtn').disabled = false;
+    document.getElementById('startBtn').disabled = true;
+    renderTape();
+    renderTree();
+    document.getElementById('verdict').innerHTML = '';
+    resize();
+  }
+  window.startSim = startSim;
 
-    const chosen = btn.dataset.val;
-    const correct = questions[idx].answer === chosen;
-    if (correct) score++;
-    answered++;
+  function stepSim() {
+    if (!running || step >= word.length) return;
+    var sym = word[step];
+    var curSet = activeSets[step];
+    var nextSet = [];
+    var seen = {};
+    curSet.forEach(function(s) {
+      var nexts = delta[s] && delta[s][sym] ? delta[s][sym] : [];
+      nexts.forEach(function(ns) {
+        if (!seen[ns]) { seen[ns] = true; nextSet.push(ns); }
+      });
+    });
+    step++;
+    activeSets.push(nextSet);
+    renderTape();
+    renderTree();
 
-    // disable buttons
-    const btns = btn.parentElement.querySelectorAll('button');
-    btns.forEach(function(b) { b.disabled = true; });
-
-    fbEl.innerHTML = '<div class="feedback ' + (correct ? 'correct' : 'incorrect') + '">' +
-      (correct ? '✓ Správně!' : '✗ Špatně. Správná odpověď: ' + questions[idx].answer) +
-      ' — ' + questions[idx].explanation + '</div>';
-
-    if (answered === questions.length) {
-      summaryEl.innerHTML = '<div class="summary">Výsledek: ' + score + '/' + questions.length + ' správných odpovědí</div>';
+    if (step >= word.length) {
+      finish();
     }
     resize();
-  });
+  }
+  window.stepSim = stepSim;
 
-  window.addEventListener('load', resize);
-  new MutationObserver(resize).observe(document.body, { childList: true, subtree: true });
+  function runAll() {
+    while (running && step < word.length) {
+      stepSim();
+    }
+  }
+  window.runAll = runAll;
+
+  function finish() {
+    running = false;
+    document.getElementById('stepBtn').disabled = true;
+    document.getElementById('runAllBtn').disabled = true;
+    var finalSet = activeSets[activeSets.length - 1];
+    var accepted = finalSet.some(function(s) { return accepting[s]; });
+    var vEl = document.getElementById('verdict');
+    if (accepted) {
+      vEl.innerHTML = '<div class="verdict accept">\u2713 Slovo \u201e' + word +
+        '\u201c je PŘIJATO \u2014 existuje výpočetní větev končící v koncovém stavu q\u2082.</div>';
+    } else {
+      vEl.innerHTML = '<div class="verdict reject">\u2717 Slovo \u201e' + word +
+        '\u201c je ODMÍTNUTO \u2014 žádná větev nekončí v koncovém stavu.</div>';
+    }
+  }
+
+  function resetSim() {
+    word = ''; step = 0; activeSets = []; running = false;
+    document.getElementById('stepBtn').disabled = true;
+    document.getElementById('runAllBtn').disabled = true;
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('wordInput').value = '';
+    document.getElementById('tape').innerHTML = '';
+    document.getElementById('tree').innerHTML = '';
+    document.getElementById('verdict').innerHTML = '';
+    resize();
+  }
+  window.resetSim = resetSim;
+
+  function renderTape() {
+    var html = '';
+    for (var i = 0; i < word.length; i++) {
+      var cls = 'tape-cell';
+      if (i < step) cls += ' done';
+      if (i === step && running) cls += ' active';
+      html += '<div class="' + cls + '">' + word[i] + '</div>';
+    }
+    document.getElementById('tape').innerHTML = html;
+  }
+
+  function renderTree() {
+    var html = '';
+    var isFinal = (step >= word.length);
+    for (var i = 0; i <= step; i++) {
+      var lbl = i === 0 ? 'Počátek' : 'Krok ' + i + ' (\u010dte: ' + word[i - 1] + ')';
+      html += '<div class="tree-level"><div class="tree-label">' + lbl + '</div>';
+      var states = activeSets[i];
+      if (states.length === 0) {
+        html += '<div class="branch dead">\u2205 v\u0161echny v\u011btve uv\u00edzly</div>';
+      } else {
+        var isLast = (i === step);
+        states.forEach(function(s) {
+          var cls = 'branch';
+          if (isLast && isFinal && accepting[s]) cls += ' accept';
+          else if (isLast && isFinal && !accepting[s]) cls += ' dead';
+          else cls += ' alive';
+          html += '<div class="' + cls + '">' + labels[s] + '</div>';
+        });
+      }
+      html += '</div>';
+    }
+    document.getElementById('tree').innerHTML = html;
+  }
+
+  new ResizeObserver(function() { resize(); }).observe(document.documentElement);
+  resize();
 })();
 </script>
 </body>

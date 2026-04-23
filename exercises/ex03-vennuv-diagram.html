@@ -4,48 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cvičení: Interaktivní Vennův diagram</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
-  }
-  h1 { font-size: 1.4em; margin-bottom: 6px; }
-  .description { margin-bottom: 18px; color: #555; }
-  .card {
-    background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 20px; margin-bottom: 16px;
-  }
-  .sets { margin-bottom: 14px; font-weight: 600; }
-  .venn-container {
-    display: flex; justify-content: center; margin-bottom: 10px;
-  }
-  svg text { pointer-events: none; user-select: none; }
-  .region { cursor: pointer; transition: opacity 0.2s; }
-  .region:hover { opacity: 0.85; }
-  .info-panel {
-    margin-top: 16px; padding: 16px 20px; border-radius: 4px;
-    border: 2px solid #ddd; background: #fafafa; min-height: 60px;
-    transition: border-color 0.3s;
-  }
-  .info-panel.active { border-color: #0f6cbf; }
-  .info-title { font-weight: 700; font-size: 1.05em; margin-bottom: 4px; }
-  .info-elements { font-size: 1.15em; font-weight: 600; color: #0f6cbf; }
-  .info-desc { color: #555; margin-top: 4px; font-size: 0.95em; }
-  .legend {
-    display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: 0.9em;
-  }
-  .legend-item { display: flex; align-items: center; gap: 6px; }
-  .legend-swatch {
-    width: 16px; height: 16px; border-radius: 3px; border: 1px solid #aaa;
-  }
-</style>
+<link rel="stylesheet" href="exercises.css">
 </head>
 <body>
 
-<h1>Cvičení: Interaktivní Vennův diagram</h1>
-<p class="description">Klikněte na jednotlivé oblasti Vennova diagramu a podívejte se, které prvky tam patří.</p>
+<h2>Cvičení: Interaktivní Vennův diagram</h2>
+<p class="desc">Klikněte na jednotlivé oblasti Vennova diagramu a podívejte se, které prvky tam patří.</p>
 
-<div class="card">
+<div class="section">
   <div class="sets">M = {1, 2, 3, 4} &nbsp;&nbsp; N = {3, 4, 5, 6}</div>
 
   <div class="venn-container">
@@ -85,7 +51,7 @@
 
   <div class="legend">
     <div class="legend-item"><div class="legend-swatch" style="background: rgba(52,152,219,0.45);"></div> Pouze M</div>
-    <div class="legend-item"><div class="legend-swatch" style="background: rgba(26,188,156,0.7);"></div> M ∩ N</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: rgba(26,188,156,0.7);"></div> M &#8745; N</div>
     <div class="legend-item"><div class="legend-swatch" style="background: rgba(155,89,182,0.45);"></div> Pouze N</div>
   </div>
 

@@ -4,46 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cvičení: Laboratoř regulárních výrazů</title>
+<link rel="stylesheet" href="exercises.css">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
-}
-h2 { margin-bottom: 12px; font-size: 20px; }
-h3 { margin: 16px 0 8px; font-size: 16px; }
-.info-box {
-  background: #e7f3fe; border-left: 4px solid #2196F3; padding: 10px 14px;
-  margin-bottom: 16px; border-radius: 4px; font-size: 13px;
-}
-label { display: block; font-weight: 600; margin-bottom: 4px; }
-input[type="text"] {
-  width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;
-  font-size: 14px; font-family: monospace; margin-bottom: 12px;
-}
-textarea {
-  width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;
-  font-size: 14px; font-family: monospace; min-height: 120px; margin-bottom: 12px;
-  resize: vertical;
-}
-.error { color: #721c24; background: #f8d7da; border: 1px solid #f5c6cb; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; display: none; }
-.btn {
-  background: #0f6cbf; color: #fff; border: none; padding: 8px 18px;
-  border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px;
-}
-.btn:hover { opacity: 0.9; }
-.btn-secondary { background: #6c757d; }
-.buttons { margin-bottom: 16px; }
-.badge-container { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-.badge {
-  display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 13px;
-  font-family: monospace;
-}
-.badge-match { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-.badge-no { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-.result-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-.icon-ok { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #28a745; color: #fff; font-size: 13px; font-weight: 700; }
-.icon-fail { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #dc3545; color: #fff; font-size: 13px; font-weight: 700; }
 .word-mono { font-family: monospace; font-size: 14px; }
 #results, #genSection { display: none; }
 </style>
@@ -51,7 +13,7 @@ textarea {
 <body>
 <h2>Cvičení: Laboratoř regulárních výrazů</h2>
 
-<div class="info-box">Priorita operátorů: iterace (*) &gt; zřetězení (·) &gt; sjednocení (+)</div>
+<div class="note note-info">Priorita operátorů: iterace (*) &gt; zřetězení (·) &gt; sjednocení (+)</div>
 
 <label for="regexInput">Formální regulární výraz:</label>
 <input type="text" id="regexInput" value="ab*+c">
@@ -69,7 +31,7 @@ bc
 ba</textarea>
 
 <div class="buttons">
-  <button class="btn" onclick="runTest()">Testovat výraz</button>
+  <button class="btn btn-primary" onclick="runTest()">Testovat výraz</button>
   <button class="btn btn-secondary" onclick="resetAll()">Resetovat</button>
 </div>
 

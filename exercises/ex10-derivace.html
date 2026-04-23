@@ -4,66 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cvičení: Derivace v regulární gramatice</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
-}
-h2 { margin-bottom: 8px; font-size: 20px; }
-p.desc { margin-bottom: 16px; color: #555; }
-.grammar-box {
-  background: #fff; border: 1px solid #dee2e6; border-radius: 6px;
-  padding: 14px 18px; margin-bottom: 18px; font-family: monospace; font-size: 14px;
-}
-.step-box {
-  background: #fff; border: 2px solid #0f6cbf; border-radius: 8px;
-  padding: 20px; margin-bottom: 16px; text-align: center;
-  background-color: #e7f3fe;
-}
-.step-formula {
-  font-family: monospace; font-size: 18px; font-weight: 700;
-  margin-bottom: 8px; letter-spacing: 1px;
-}
-.step-rule { font-size: 13px; color: #555; }
-.nav-row {
-  display: flex; align-items: center; justify-content: center; gap: 12px;
-  margin-bottom: 10px;
-}
-.btn {
-  background: #0f6cbf; color: #fff; border: none; padding: 8px 18px;
-  border-radius: 4px; cursor: pointer; font-size: 14px;
-}
-.btn:hover { opacity: 0.9; }
-.btn:disabled { opacity: 0.5; cursor: default; }
-.btn-secondary { background: #6c757d; }
-.btn-reset { width: 100%; margin-bottom: 20px; }
-.step-counter { font-size: 14px; font-weight: 600; min-width: 50px; text-align: center; }
-.quiz-section {
-  background: #fff; border: 1px solid #dee2e6; border-radius: 6px;
-  padding: 16px 18px; margin-top: 8px;
-}
-.quiz-section h3 { font-size: 15px; margin-bottom: 10px; }
-.quiz-row { display: flex; gap: 8px; margin-bottom: 10px; }
-.quiz-row input[type="text"] {
-  flex: 1; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;
-  font-size: 14px; font-family: monospace;
-}
-.feedback {
-  padding: 12px 16px; border-radius: 4px; display: none;
-  font-size: 14px; border: 1px solid;
-}
-.feedback.correct { background: #d4edda; border-color: #c3e6cb; color: #155724; display: block; }
-.feedback.incorrect { background: #f8d7da; border-color: #f5c6cb; color: #721c24; display: block; }
-</style>
+<link rel="stylesheet" href="exercises.css">
 </head>
 <body>
 <h2>Cvičení: Derivace v regulární gramatice</h2>
 <p class="desc">Gramatika G = ({S, A}, {a, b}, P, S) s pravidly: S → aA, A → bS | ε</p>
 
-<div class="step-box" id="stepBox">
-  <div class="step-formula" id="stepFormula"></div>
-  <div class="step-rule" id="stepRule"></div>
+<div class="deriv-box" id="stepBox">
+  <div class="deriv-formula" id="stepFormula"></div>
+  <div class="deriv-rule" id="stepRule"></div>
 </div>
 
 <div class="nav-row">
@@ -72,7 +21,7 @@ p.desc { margin-bottom: 16px; color: #555; }
   <button class="btn" id="btnNext" onclick="nextStep()">Dál →</button>
 </div>
 
-<button class="btn btn-secondary btn-reset" onclick="resetStepper()">Resetovat</button>
+<button class="btn btn-secondary" style="width:100%;margin-bottom:20px;" onclick="resetStepper()">Resetovat</button>
 
 <div class="quiz-section">
   <h3>Jaký jazyk tato gramatika generuje?</h3>

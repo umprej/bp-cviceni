@@ -42,7 +42,7 @@ Všechny soubory posílají `postMessage({ type: 'iframeResize', height })` pro 
 > Stromy uvidíme jako derivační stromy ... a stavové stromy ...
 
 **[CVIČENÍ: ex02-grafy-stromy-kviz.html]**
-*Kvíz o grafech a stromech — orientovaný/neorientovaný graf, strom, smyčka, vstupní stupeň.*
+*Interaktivní stavba grafů — student klikáním staví uzly a hrany, systém v reálném čase analyzuje vlastnosti grafu (souvislost, cykly, strom) a plní konkrétní úkoly (K₃, strom se 4 uzly apod.).*
 
 ---
 
@@ -71,7 +71,7 @@ Všechny soubory posílají `postMessage({ type: 'iframeResize', height })` pro 
 > Klíčový fakt: DKA a NKA jsou stejně silné. ... Každý NKA se dá převést na DKA.
 
 **[CVIČENÍ: ex05-dka-vs-nka.html]**
-*Kvíz: rozlišit DKA a NKA podle formálních zápisů (δ funkce, epsilon-přechody atd.).*
+*NKA — vizualizace paralelních výpočtů: student zadá slovo a krokuje výpočet NKA, kde se větve rozdělují při nedeterminismu, umírají při uvíznutí, a slovo je přijato pokud alespoň jedna větev skončí v koncovém stavu.*
 
 ---
 
@@ -89,7 +89,7 @@ Všechny soubory posílají `postMessage({ type: 'iframeResize', height })` pro 
 > Oba typy jsou vzájemně převoditelné.
 
 **[CVIČENÍ: ex07-mealy-moore.html]**
-*Kvíz: rozlišit Mealyho a Moorův automat podle vlastností.*
+*Mealy/Moore — simulátor výstupu: student kliká na vstupní symboly (0/1) a vidí, jak detektor parity produkuje výstup krok za krokem, s přepínáním mezi Mealyho (výstup na přechodech) a Moorovým (výstup ze stavů) pohledem a porovnáním délek výstupů.*
 
 ---
 
@@ -136,7 +136,7 @@ Všechny soubory posílají `postMessage({ type: 'iframeResize', height })` pro 
 > Rekurzivně spočetné jazyky (typ 0) – nejobecnější třída.
 
 **[CVIČENÍ: ex13-klasifikace-pravidel.html]**
-*Klasifikace přepisovacích pravidel — u každého pravidla určit typ Chomského hierarchie.*
+*Pískoviště gramatických pravidel — student píše vlastní přepisovací pravidla a systém je automaticky klasifikuje v Chomského hierarchii s vysvětlením, proč pravidlo patří do daného typu. Vizuální přehled distribuce pravidel.*
 
 ---
 
@@ -183,16 +183,16 @@ Všechny soubory posílají `postMessage({ type: 'iframeResize', height })` pro 
 | Cvičení | Soubor | Umístění |
 |---------|--------|----------|
 | 1 | ex01-mnozinove-operace.html | Kap. 1 — po operacích s množinami |
-| 2 | ex02-grafy-stromy-kviz.html | Kap. 1 — po stromech |
+| 2 | ex02-grafy-stromy-kviz.html | Kap. 1 — po stromech (interaktivní stavba grafů) |
 | 3 | ex03-vennuv-diagram.html | Kap. 1 — po potenční množině |
 | 4 | ex04-simulator-dka.html | Kap. 2 — po formální definici a konfiguraci |
-| 5 | ex05-dka-vs-nka.html | Kap. 2 — po DKA vs. NKA |
+| 5 | ex05-dka-vs-nka.html | Kap. 2 — po DKA vs. NKA (vizualizace paralelních výpočtů NKA) |
 | 6 | ex06-determinizace.html | Kap. 2 — po determinizaci + Kap. 4 konec |
-| 7 | ex07-mealy-moore.html | Kap. 2 — po Mealy/Moore |
+| 7 | ex07-mealy-moore.html | Kap. 2 — po Mealy/Moore (simulátor výstupu s porovnáním) |
 | 8 | ex08-regex-lab.html | Kap. 3 — po regulárních výrazech + Kap. 4 po RV→KA |
 | 9 | ex09-chomsky-hierarchie.html | Kap. 3 — po Chomského klasifikaci |
 | 10 | ex10-derivace.html | Kap. 3 — po derivaci |
 | 11 | ex11-tabulka-prechodu.html | Kap. 2 — po tabulce přechodů + Kap. 4 po RG→KA |
 | 12 | ex12-regex-jazyk.html | Kap. 4 — po KA→RV |
-| 13 | ex13-klasifikace-pravidel.html | Kap. 3 — po klasifikaci jazyků |
+| 13 | ex13-klasifikace-pravidel.html | Kap. 3 — po klasifikaci jazyků (pískoviště pravidel) |
 | 14 | ex14-semafor.html | Kap. 2 — po příkladu semaforu |

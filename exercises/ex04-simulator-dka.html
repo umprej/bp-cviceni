@@ -4,39 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cvičení: Simulátor DKA — krokování</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
-}
-h2 { margin-bottom: 6px; font-size: 1.3em; }
-p.desc { margin-bottom: 16px; color: #555; }
-.btn { display: inline-block; cursor: pointer; border: none; color: #fff; border-radius: 4px; padding: 7px 16px; font-size: 14px; margin-right: 6px; margin-bottom: 6px; }
-.btn-primary { background: #0f6cbf; }
-.btn-primary:hover { background: #0d5da3; }
-.btn-secondary { background: #6c757d; }
-.btn-secondary:hover { background: #5a6268; }
-.btn-success { background: #28a745; }
-.btn-success:hover { background: #218838; }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
-.feedback-correct { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 10px 14px; border-radius: 4px; margin-top: 10px; }
-.feedback-incorrect { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 10px 14px; border-radius: 4px; margin-top: 10px; }
-.section { background: #fff; border-radius: 6px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-svg text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
-.tape { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0; }
-.tape-cell { width: 34px; height: 34px; border: 2px solid #aaa; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; background: #fff; }
-.tape-cell.active { background: #0f6cbf; color: #fff; border-color: #0f6cbf; }
-.tape-cell.done { background: #b3d7ff; border-color: #80b8f0; color: #333; }
-.log { font-family: monospace; font-size: 13px; max-height: 160px; overflow-y: auto; }
-.log-entry { padding: 2px 0; }
-input[type=text] { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 180px; }
-.input-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-.verdict { font-size: 1.1em; font-weight: 700; margin-top: 10px; padding: 10px 14px; border-radius: 4px; }
-.verdict.accept { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-.verdict.reject { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-.error-msg { color: #dc3545; font-size: 13px; margin-top: 4px; }
-</style>
+<link rel="stylesheet" href="exercises.css">
 </head>
 <body>
 <h2>Cvičení: Simulátor DKA — krokování</h2>

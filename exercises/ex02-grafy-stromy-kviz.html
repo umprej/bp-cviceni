@@ -3,201 +3,430 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cvičení: Grafy a stromy — kvíz</title>
+<title>Cvičení: Interaktivní stavba grafů</title>
+<link rel="stylesheet" href="exercises.css">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
-  }
-  h1 { font-size: 1.4em; margin-bottom: 6px; }
-  .description { margin-bottom: 18px; color: #555; }
-  .card {
-    background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 20px; margin-bottom: 16px;
-  }
-  .question-num { font-weight: 700; color: #0f6cbf; margin-bottom: 4px; }
-  .question-text { margin-bottom: 10px; font-style: italic; }
-  .options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
-  .option {
-    background: #f0f0f0; border: 2px solid #ccc; border-radius: 4px; padding: 7px 16px;
-    cursor: pointer; transition: border-color 0.15s, background 0.15s; user-select: none;
-  }
-  .option:hover { border-color: #0f6cbf; background: #e8f0fe; }
-  .option.selected { border-color: #0f6cbf; background: #d6e8fa; font-weight: 600; }
-  .option.correct-highlight { border-color: #28a745; background: #d4edda; }
-  .option.incorrect-highlight { border-color: #dc3545; background: #f8d7da; }
-  .q-feedback {
-    margin-top: 6px; padding: 6px 10px; border-radius: 4px; font-size: 0.9em; display: none;
-  }
-  .q-feedback.correct {
-    display: block; background: #d4edda; border: 1px solid #c3e6cb; color: #155724;
-  }
-  .q-feedback.incorrect {
-    display: block; background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24;
-  }
-  .buttons { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
-  .btn {
-    background: #0f6cbf; color: #fff; border: none; padding: 10px 22px;
-    border-radius: 4px; cursor: pointer; font-size: 14px;
-  }
-  .btn:hover { background: #0d5da3; }
-  .btn-reset { background: #6c757d; }
-  .btn-reset:hover { background: #5a6268; }
-  .feedback {
-    margin-top: 14px; padding: 12px 16px; border-radius: 4px; display: none;
-  }
-  .feedback.correct {
-    display: block; background: #d4edda; border: 1px solid #c3e6cb; color: #155724;
-  }
-  .feedback.incorrect {
-    display: block; background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24;
-  }
+.btn.active { outline: 3px solid #ffc107; }
+.analysis {
+  background: #fff; border-radius: 6px; padding: 14px 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
 </style>
 </head>
 <body>
+<h2>Cvičení: Interaktivní stavba grafů</h2>
+<p class="desc">Sestavte graf klikáním na plátno (uzly) a propojte je hranami. Sledujte, jak se mění vlastnosti grafu.</p>
 
-<h1>Cvičení: Grafy a stromy — kvíz</h1>
-<p class="description">Vyberte správnou odpověď u každé otázky a poté klikněte na tlačítko Zkontrolovat.</p>
-
-<div id="quiz"></div>
-
-<div class="buttons">
-  <button class="btn" id="checkBtn">Zkontrolovat</button>
-  <button class="btn btn-reset" id="resetBtn">Resetovat</button>
+<div class="toolbar">
+  <button class="btn btn-primary active" id="btnNode" onclick="setMode('node')">+ Uzel</button>
+  <button class="btn btn-primary" id="btnEdge" onclick="setMode('edge')">↔ Hrana</button>
+  <button class="btn btn-secondary" id="btnMove" onclick="setMode('move')">✋ Přesun</button>
+  <button class="btn btn-danger" id="btnDelete" onclick="setMode('delete')">✕ Smazat</button>
+  <button class="btn btn-secondary" onclick="clearAll()">Vymazat vše</button>
+  <label class="toggle">
+    <input type="checkbox" id="directedToggle" onchange="toggleDirected()">
+    Orientovaný graf
+  </label>
 </div>
 
-<div class="feedback" id="feedback"></div>
+<div class="canvas-wrap" id="canvas">
+  <svg class="edges" id="edgeSvg">
+    <defs>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+      </marker>
+    </defs>
+  </svg>
+</div>
+
+<div class="analysis">
+  <h3>Vlastnosti grafu</h3>
+  <div id="props"></div>
+</div>
+
+<div class="challenge">
+  <h3>Úkoly</h3>
+  <div id="challenges"></div>
+</div>
+
+<p class="help-text">Tip: V režimu „Hrana" klikněte na zdrojový uzel, pak na cílový. V režimu „Smazat" klikněte na uzel nebo hranu.</p>
 
 <script>
 (function() {
-  var questions = [
-    {
-      text: 'Hrany grafu jsou uspořádané dvojice (u, v), směr je důležitý.',
-      options: ['orientovaný', 'neorientovaný'],
-      correct: 'orientovaný'
-    },
-    {
-      text: 'Mezi každými dvěma vrcholy existuje právě jedna cesta a neexistují cykly.',
-      options: ['strom', 'obecný graf'],
-      correct: 'strom'
-    },
-    {
-      text: 'Hrana z vrcholu u do sebe samého (u, u).',
-      options: ['smyčka', 'most', 'cesta'],
-      correct: 'smyčka'
-    },
-    {
-      text: 'Počet hran směřujících do vrcholu v orientovaném grafu.',
-      options: ['vstupní stupeň', 'výstupní stupeň', 'kardinalita'],
-      correct: 'vstupní stupeň'
-    }
+  var nodes = [];
+  var edges = [];
+  var nodeId = 0;
+  var mode = 'node';
+  var directed = false;
+  var edgeStart = null;
+  var dragNode = null;
+  var dragOffset = { x: 0, y: 0 };
+
+  var canvas = document.getElementById('canvas');
+  var edgeSvg = document.getElementById('edgeSvg');
+
+  var challenges = [
+    { text: 'Sestavte strom se 4 uzly (souvislý, bez cyklů, 3 hrany)', check: function() {
+      return nodes.length === 4 && edges.length === 3 && isConnected() && !hasCycle();
+    }},
+    { text: 'Sestavte graf, který obsahuje cyklus', check: function() {
+      return nodes.length >= 3 && hasCycle();
+    }},
+    { text: 'Sestavte úplný graf K₃ (3 uzly, každý s každým)', check: function() {
+      if (nodes.length !== 3) return false;
+      var ids = nodes.map(function(n) { return n.id; });
+      for (var i = 0; i < ids.length; i++) {
+        for (var j = i + 1; j < ids.length; j++) {
+          if (!hasEdgeBetween(ids[i], ids[j])) return false;
+        }
+      }
+      return true;
+    }}
   ];
 
-  var selected = {};
-  var quizEl = document.getElementById('quiz');
-  var feedbackEl = document.getElementById('feedback');
-
-  function buildUI() {
-    quizEl.innerHTML = '';
-    selected = {};
-    feedbackEl.className = 'feedback';
-    feedbackEl.style.display = 'none';
-
-    questions.forEach(function(q, qi) {
-      var card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = '<div class="question-num">Otázka ' + (qi + 1) + '</div>' +
-        '<div class="question-text">' + q.text + '</div>';
-
-      var optionsDiv = document.createElement('div');
-      optionsDiv.className = 'options';
-      q.options.forEach(function(opt) {
-        var btn = document.createElement('div');
-        btn.className = 'option';
-        btn.textContent = opt;
-        btn.addEventListener('click', function() {
-          // Remove old selection highlight but not correct/incorrect highlights
-          optionsDiv.querySelectorAll('.option').forEach(function(o) {
-            o.classList.remove('selected');
-          });
-          btn.classList.add('selected');
-          selected[qi] = opt;
-        });
-        optionsDiv.appendChild(btn);
-      });
-      card.appendChild(optionsDiv);
-
-      var fb = document.createElement('div');
-      fb.className = 'q-feedback';
-      fb.id = 'qfb-' + qi;
-      card.appendChild(fb);
-
-      quizEl.appendChild(card);
-    });
-    sendHeight();
+  function resize() {
+    parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
   }
 
-  document.getElementById('checkBtn').addEventListener('click', function() {
-    var allCorrect = true;
-    var allAnswered = true;
+  function setMode(m) {
+    mode = m;
+    edgeStart = null;
+    nodes.forEach(function(n) { n.el.classList.remove('selected'); });
+    document.querySelectorAll('.btn').forEach(function(b) { b.classList.remove('active'); });
+    var btnMap = { node: 'btnNode', edge: 'btnEdge', delete: 'btnDelete', move: 'btnMove' };
+    if (btnMap[m]) document.getElementById(btnMap[m]).classList.add('active');
+    canvas.className = 'canvas-wrap mode-' + m;
+  }
+  window.setMode = setMode;
 
-    questions.forEach(function(q, qi) {
-      var fb = document.getElementById('qfb-' + qi);
-      var card = quizEl.children[qi];
-      var options = card.querySelectorAll('.option');
+  canvas.addEventListener('click', function(e) {
+    if (mode !== 'node') return;
+    if (e.target !== canvas && e.target !== edgeSvg && e.target.tagName !== 'svg') return;
+    var rect = canvas.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    addNode(x, y);
+  });
 
-      // Reset highlights
-      options.forEach(function(o) {
-        o.classList.remove('correct-highlight', 'incorrect-highlight');
-      });
+  canvas.addEventListener('mousedown', function(e) {
+    if (mode !== 'move') return;
+    var el = e.target.closest('.node');
+    if (!el) return;
+    var node = nodes.find(function(n) { return n.el === el; });
+    if (!node) return;
+    dragNode = node;
+    var rect = canvas.getBoundingClientRect();
+    dragOffset.x = e.clientX - rect.left - node.x;
+    dragOffset.y = e.clientY - rect.top - node.y;
+    e.preventDefault();
+  });
 
-      if (selected[qi] === undefined) {
-        allAnswered = false;
-        allCorrect = false;
-        fb.className = 'q-feedback incorrect';
-        fb.textContent = 'Vyberte odpověď.';
-        return;
-      }
+  document.addEventListener('mousemove', function(e) {
+    if (!dragNode) return;
+    var rect = canvas.getBoundingClientRect();
+    dragNode.x = Math.max(20, Math.min(rect.width - 20, e.clientX - rect.left - dragOffset.x));
+    dragNode.y = Math.max(20, Math.min(rect.height - 20, e.clientY - rect.top - dragOffset.y));
+    dragNode.el.style.left = dragNode.x + 'px';
+    dragNode.el.style.top = dragNode.y + 'px';
+    renderEdges();
+  });
 
-      if (selected[qi] === q.correct) {
-        fb.className = 'q-feedback correct';
-        fb.textContent = 'Správně!';
-        options.forEach(function(o) {
-          if (o.textContent === q.correct) o.classList.add('correct-highlight');
-        });
+  document.addEventListener('mouseup', function() { dragNode = null; });
+
+  function addNode(x, y) {
+    var id = nodeId++;
+    var el = document.createElement('div');
+    el.className = 'node';
+    el.textContent = 'v' + id;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      onNodeClick(id);
+    });
+    canvas.appendChild(el);
+    var node = { id: id, x: x, y: y, el: el };
+    nodes.push(node);
+    analyze();
+    resize();
+  }
+
+  function onNodeClick(id) {
+    if (mode === 'delete') {
+      removeNode(id);
+    } else if (mode === 'edge') {
+      if (edgeStart === null) {
+        edgeStart = id;
+        var n = nodes.find(function(n) { return n.id === id; });
+        if (n) n.el.classList.add('selected');
       } else {
-        allCorrect = false;
-        fb.className = 'q-feedback incorrect';
-        fb.textContent = 'Nesprávně. Správná odpověď: ' + q.correct + '.';
-        options.forEach(function(o) {
-          if (o.textContent === selected[qi]) o.classList.add('incorrect-highlight');
-          if (o.textContent === q.correct) o.classList.add('correct-highlight');
-        });
+        if (edgeStart !== id) {
+          if (!edgeExists(edgeStart, id)) {
+            edges.push({ from: edgeStart, to: id });
+          }
+        }
+        nodes.forEach(function(n) { n.el.classList.remove('selected'); });
+        edgeStart = null;
+        renderEdges();
+        analyze();
+        resize();
       }
-    });
+    }
+  }
 
-    feedbackEl.className = 'feedback ' + (allCorrect ? 'correct' : 'incorrect');
-    feedbackEl.style.display = 'block';
-    feedbackEl.textContent = allCorrect
-      ? 'Výborně! Všechny odpovědi jsou správné.'
-      : (allAnswered ? 'Některé odpovědi nejsou správné. Zkuste to znovu.' : 'Odpovězte na všechny otázky.');
-    sendHeight();
-  });
+  function removeNode(id) {
+    edges = edges.filter(function(e) { return e.from !== id && e.to !== id; });
+    var idx = nodes.findIndex(function(n) { return n.id === id; });
+    if (idx >= 0) {
+      nodes[idx].el.remove();
+      nodes.splice(idx, 1);
+    }
+    renderEdges();
+    analyze();
+    resize();
+  }
 
-  document.getElementById('resetBtn').addEventListener('click', function() {
-    buildUI();
-  });
-
-  function sendHeight() {
-    requestAnimationFrame(function() {
-      var h = document.documentElement.scrollHeight;
-      window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
+  function edgeExists(a, b) {
+    return edges.some(function(e) {
+      if (directed) return e.from === a && e.to === b;
+      return (e.from === a && e.to === b) || (e.from === b && e.to === a);
     });
   }
 
-  buildUI();
-  window.addEventListener('load', sendHeight);
-  window.addEventListener('resize', sendHeight);
+  function hasEdgeBetween(a, b) {
+    return edges.some(function(e) {
+      return (e.from === a && e.to === b) || (e.from === b && e.to === a);
+    });
+  }
+
+  function renderEdges() {
+    while (edgeSvg.childNodes.length > 1) edgeSvg.removeChild(edgeSvg.lastChild);
+    edges.forEach(function(e, idx) {
+      var nf = nodes.find(function(n) { return n.id === e.from; });
+      var nt = nodes.find(function(n) { return n.id === e.to; });
+      if (!nf || !nt) return;
+
+      var dx = nt.x - nf.x, dy = nt.y - nf.y;
+      var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      var r = 20;
+      var x1 = nf.x + (dx / dist) * r;
+      var y1 = nf.y + (dy / dist) * r;
+      var x2 = nt.x - (dx / dist) * r;
+      var y2 = nt.y - (dy / dist) * r;
+
+      var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1);
+      line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2);
+      line.setAttribute('y2', y2);
+      line.setAttribute('stroke', '#555');
+      line.setAttribute('stroke-width', '2');
+      if (directed) line.setAttribute('marker-end', 'url(#arrowhead)');
+      line.style.pointerEvents = 'stroke';
+      line.style.cursor = mode === 'delete' ? 'not-allowed' : 'default';
+      line.setAttribute('data-edge', idx);
+      line.addEventListener('click', function() {
+        if (mode === 'delete') {
+          edges.splice(idx, 1);
+          renderEdges();
+          analyze();
+          resize();
+        }
+      });
+      edgeSvg.appendChild(line);
+    });
+  }
+
+  function toggleDirected() {
+    directed = document.getElementById('directedToggle').checked;
+    renderEdges();
+    analyze();
+  }
+  window.toggleDirected = toggleDirected;
+
+  function clearAll() {
+    nodes.forEach(function(n) { n.el.remove(); });
+    nodes = [];
+    edges = [];
+    nodeId = 0;
+    edgeStart = null;
+    renderEdges();
+    analyze();
+    resize();
+  }
+  window.clearAll = clearAll;
+
+  /* ---- Graph analysis ---- */
+  function adj() {
+    var a = {};
+    nodes.forEach(function(n) { a[n.id] = []; });
+    edges.forEach(function(e) {
+      a[e.from].push(e.to);
+      if (!directed) a[e.to].push(e.from);
+    });
+    return a;
+  }
+
+  function adjUndirected() {
+    var a = {};
+    nodes.forEach(function(n) { a[n.id] = []; });
+    edges.forEach(function(e) {
+      a[e.from].push(e.to);
+      a[e.to].push(e.from);
+    });
+    return a;
+  }
+
+  function isConnected() {
+    if (nodes.length <= 1) return true;
+    var a = adjUndirected();
+    var visited = {};
+    var queue = [nodes[0].id];
+    visited[nodes[0].id] = true;
+    while (queue.length) {
+      var cur = queue.shift();
+      a[cur].forEach(function(nb) {
+        if (!visited[nb]) { visited[nb] = true; queue.push(nb); }
+      });
+    }
+    return Object.keys(visited).length === nodes.length;
+  }
+
+  function hasCycle() {
+    if (directed) return hasCycleDirected();
+    return hasCycleUndirected();
+  }
+
+  function hasCycleUndirected() {
+    var a = adjUndirected();
+    var visited = {};
+    for (var i = 0; i < nodes.length; i++) {
+      if (visited[nodes[i].id]) continue;
+      if (dfsCycleUndir(nodes[i].id, -1, visited, a)) return true;
+    }
+    return false;
+  }
+
+  function dfsCycleUndir(v, parent, visited, a) {
+    visited[v] = true;
+    for (var i = 0; i < a[v].length; i++) {
+      var nb = a[v][i];
+      if (!visited[nb]) {
+        if (dfsCycleUndir(nb, v, visited, a)) return true;
+      } else if (nb !== parent) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function hasCycleDirected() {
+    var a = adj();
+    var color = {}; // 0=white, 1=gray, 2=black
+    nodes.forEach(function(n) { color[n.id] = 0; });
+    for (var i = 0; i < nodes.length; i++) {
+      if (color[nodes[i].id] === 0) {
+        if (dfsCycleDir(nodes[i].id, color, a)) return true;
+      }
+    }
+    return false;
+  }
+
+  function dfsCycleDir(v, color, a) {
+    color[v] = 1;
+    for (var i = 0; i < a[v].length; i++) {
+      var nb = a[v][i];
+      if (color[nb] === 1) return true;
+      if (color[nb] === 0 && dfsCycleDir(nb, color, a)) return true;
+    }
+    color[v] = 2;
+    return false;
+  }
+
+  function degrees() {
+    var deg = {};
+    nodes.forEach(function(n) { deg[n.id] = { in: 0, out: 0 }; });
+    edges.forEach(function(e) {
+      deg[e.from].out++;
+      deg[e.to].in++;
+      if (!directed) { deg[e.to].out++; deg[e.from].in++; }
+    });
+    return deg;
+  }
+
+  function isTree() {
+    return nodes.length >= 1 && edges.length === nodes.length - 1 && isConnected() && !hasCycle();
+  }
+
+  function componentCount() {
+    var a = adjUndirected();
+    var visited = {};
+    var count = 0;
+    nodes.forEach(function(n) {
+      if (!visited[n.id]) {
+        count++;
+        var queue = [n.id];
+        visited[n.id] = true;
+        while (queue.length) {
+          var cur = queue.shift();
+          a[cur].forEach(function(nb) {
+            if (!visited[nb]) { visited[nb] = true; queue.push(nb); }
+          });
+        }
+      }
+    });
+    return count;
+  }
+
+  function analyze() {
+    var propsEl = document.getElementById('props');
+    if (nodes.length === 0) {
+      propsEl.innerHTML = '<div class="prop" style="color:#999;">Přidejte uzly kliknutím na plátno.</div>';
+      renderChallenges();
+      return;
+    }
+
+    var connected = isConnected();
+    var tree = isTree();
+    var cyclic = hasCycle();
+    var comps = componentCount();
+    var deg = degrees();
+    var maxDeg = 0;
+    nodes.forEach(function(n) {
+      var d = directed ? deg[n.id].in + deg[n.id].out : deg[n.id].out;
+      if (d > maxDeg) maxDeg = d;
+    });
+
+    var html = '';
+    html += prop(connected, 'Souvislý', connected ? 'Ano — všechny uzly jsou dosažitelné' : 'Ne — graf má ' + comps + ' komponent(y)');
+    html += prop(!cyclic, 'Acyklický', cyclic ? 'Ne — graf obsahuje cyklus' : 'Ano — neobsahuje cyklus');
+    html += prop(tree, 'Strom', tree ? 'Ano — souvislý, acyklický, |E| = |V| − 1' : 'Ne');
+    html += '<div class="prop" style="color:#555;">Uzly: ' + nodes.length + ' &nbsp;|&nbsp; Hrany: ' + edges.length + ' &nbsp;|&nbsp; Typ: ' + (directed ? 'orientovaný' : 'neorientovaný') + '</div>';
+
+    propsEl.innerHTML = html;
+    renderChallenges();
+  }
+
+  function prop(ok, label, detail) {
+    return '<div class="prop"><span class="dot ' + (ok ? 'yes' : 'no') + '"></span><strong>' + label + ':</strong> ' + detail + '</div>';
+  }
+
+  function renderChallenges() {
+    var el = document.getElementById('challenges');
+    var html = '';
+    challenges.forEach(function(c, i) {
+      var done = c.check();
+      html += '<div class="task">' + (i + 1) + '. ' + c.text +
+        ' <span class="status ' + (done ? 'done' : 'pending') + '">' +
+        (done ? '✓ Splněno' : '…') + '</span></div>';
+    });
+    el.innerHTML = html;
+  }
+
+  analyze();
+
+  new ResizeObserver(function() { resize(); }).observe(document.documentElement);
+  resize();
 })();
 </script>
 </body>

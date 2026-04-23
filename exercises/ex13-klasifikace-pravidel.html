@@ -3,128 +3,243 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cvičení: Klasifikace přepisovacích pravidel</title>
+<title>Cvičení: Pískoviště gramatických pravidel</title>
+<link rel="stylesheet" href="exercises.css">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #f4f4f4; color: #333; padding: 20px; line-height: 1.6; font-size: 14px;
-}
-h2 { margin-bottom: 8px; }
-p.desc { margin-bottom: 16px; }
-.card {
-  background: #fff; border: 2px solid #ddd; border-radius: 6px; padding: 14px 18px;
-  margin-bottom: 12px; transition: border-color 0.3s;
-}
-.card.card-correct { border-color: #28a745; background: #d4edda; }
-.card.card-incorrect { border-color: #dc3545; background: #f8d7da; }
-.rule { font-family: 'Courier New', Courier, monospace; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-.options label { display: inline-block; margin-right: 16px; cursor: pointer; }
-.options input { margin-right: 4px; }
-.btn { background: #0f6cbf; color: #fff; border: none; border-radius: 4px; padding: 7px 16px; cursor: pointer; font-size: 14px; margin-right: 8px; }
-.btn:hover { opacity: 0.9; }
-.btn-secondary { background: #6c757d; }
-.feedback { margin-top: 12px; padding: 10px 14px; border-radius: 4px; display: none; }
-.feedback.correct { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; display: block; }
-.feedback.incorrect { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; display: block; }
+.preset-btn { font-family: 'Courier New', monospace; font-size: 12px; }
+.type-badge.invalid { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
+.rule-card { transition: border-color 0.2s; }
+input[type=text] { width: 260px; }
 </style>
 </head>
 <body>
-<h2>Cvičení: Klasifikace přepisovacích pravidel</h2>
-<p class="desc">U každého pravidla určete jeho typ (Chomského hierarchie).</p>
+<h2>Cvičení: Pískoviště gramatických pravidel</h2>
+<p class="desc">Pište vlastní přepisovací pravidla a pozorujte, jak je systém automaticky zařadí do Chomského hierarchie. Velká písmena = neterminály, malá = terminály.</p>
 
-<div id="cards"></div>
+<div class="section">
+  <h3>Přidejte pravidlo</h3>
+  <div class="input-row">
+    <input type="text" id="ruleInput" placeholder="např. A → aB nebo S → ε"
+      onkeydown="if(event.key==='Enter')addRule()">
+    <button class="btn btn-primary" onclick="addRule()">Přidat</button>
+    <button class="btn btn-secondary" onclick="clearAll()">Vymazat vše</button>
+  </div>
+  <div class="presets">
+    <span>Příklady:</span>
+    <button class="btn btn-secondary btn-sm preset-btn" onclick="addPreset('S → aA')">S → aA</button>
+    <button class="btn btn-secondary btn-sm preset-btn" onclick="addPreset('A → bS')">A → bS</button>
+    <button class="btn btn-secondary btn-sm preset-btn" onclick="addPreset('A → ε')">A → ε</button>
+    <button class="btn btn-secondary btn-sm preset-btn" onclick="addPreset('S → aSb')">S → aSb</button>
+    <button class="btn btn-secondary btn-sm preset-btn" onclick="addPreset('aAb → aXYb')">aAb → aXYb</button>
+    <button class="btn btn-secondary btn-sm preset-btn" onclick="addPreset('AB → CD')">AB → CD</button>
+  </div>
+  <p class="help-text">
+    Použijte <code>→</code> nebo <code>-></code> jako šipku. <code>ε</code> nebo <code>eps</code> pro prázdný řetězec.
+    Velká písmena (A–Z) = neterminály, malá (a–z) a číslice = terminály.
+  </p>
+</div>
 
-<button class="btn" onclick="checkAnswers()">Zkontrolovat</button>
-<button class="btn btn-secondary" onclick="resetAll()">Reset</button>
+<div class="section">
+  <h3>Pravidla a klasifikace</h3>
+  <div class="rule-list" id="ruleList">
+    <div style="color:#999; font-size:13px;">Zatím žádná pravidla — přidejte je výše.</div>
+  </div>
 
-<div id="feedback" class="feedback"></div>
+  <div class="hier-bar" id="hierBar">
+    <div class="hier-seg t3">Typ 3<br>(regulární)<span class="count" id="count3">0</span></div>
+    <div class="hier-seg t2">Typ 2<br>(bezkontextová)<span class="count" id="count2">0</span></div>
+    <div class="hier-seg t1">Typ 1<br>(kontextová)<span class="count" id="count1">0</span></div>
+    <div class="hier-seg t0">Typ 0<br>(neomezená)<span class="count" id="count0">0</span></div>
+  </div>
+</div>
+
+<div class="note note-warn">
+  <strong>Výzva:</strong> Zkuste sestavit gramatiku, ve které jsou všechna pravidla typu 3 (regulární).
+  Potom ji zkuste rozšířit na typ 2 — co musíte změnit?
+</div>
 
 <script>
-var rules = [
-  { text: 'A \u2192 aB', correct: 'type3' },
-  { text: 'A \u2192 aBc', correct: 'type2' },
-  { text: 'aAb \u2192 a\u03b1b', correct: 'type1' },
-  { text: 'AB \u2192 CD', correct: 'type0' },
-  { text: 'S \u2192 \u03b5 (S se nevyskytuje na prav\u00e9 stran\u011b)', correct: 'type3' },
-  { text: 'A \u2192 a', correct: 'type3' }
-];
+(function() {
+  var rules = []; // { left: string, right: string, type: number, reason: string }
 
-var types = [
-  { val: 'type3', label: 'Regul\u00e1rn\u00ed (typ 3)' },
-  { val: 'type2', label: 'Bezkontextov\u00e1 (typ 2)' },
-  { val: 'type1', label: 'Kontextov\u00e1 (typ 1)' },
-  { val: 'type0', label: 'Neomezen\u00e1 (typ 0)' }
-];
-
-var container = document.getElementById('cards');
-rules.forEach(function(r, i) {
-  var card = document.createElement('div');
-  card.className = 'card';
-  card.id = 'card-' + i;
-  var ruleDiv = document.createElement('div');
-  ruleDiv.className = 'rule';
-  ruleDiv.textContent = r.text;
-  card.appendChild(ruleDiv);
-  var opts = document.createElement('div');
-  opts.className = 'options';
-  types.forEach(function(t) {
-    var lbl = document.createElement('label');
-    var inp = document.createElement('input');
-    inp.type = 'radio';
-    inp.name = 'q' + i;
-    inp.value = t.val;
-    lbl.appendChild(inp);
-    lbl.appendChild(document.createTextNode(t.label));
-    opts.appendChild(lbl);
-  });
-  card.appendChild(opts);
-  container.appendChild(card);
-});
-
-function checkAnswers() {
-  var score = 0;
-  var total = rules.length;
-  rules.forEach(function(r, i) {
-    var card = document.getElementById('card-' + i);
-    card.classList.remove('card-correct','card-incorrect');
-    var sel = document.querySelector('input[name="q' + i + '"]:checked');
-    if (sel && sel.value === r.correct) {
-      card.classList.add('card-correct');
-      score++;
-    } else {
-      card.classList.add('card-incorrect');
-    }
-  });
-  var fb = document.getElementById('feedback');
-  if (score === total) {
-    fb.className = 'feedback correct';
-    fb.textContent = 'V\u00fdborn\u011b! V\u0161echny odpov\u011bdi jsou spr\u00e1vn\u00e9.';
-  } else {
-    fb.className = 'feedback incorrect';
-    fb.textContent = 'Chyba! Spr\u00e1vn\u011b: ' + score + '/' + total;
+  function resize() {
+    parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
   }
-}
 
-function resetAll() {
-  rules.forEach(function(r, i) {
-    var card = document.getElementById('card-' + i);
-    card.classList.remove('card-correct','card-incorrect');
-    document.querySelectorAll('input[name="q' + i + '"]').forEach(function(inp) { inp.checked = false; });
-  });
-  var fb = document.getElementById('feedback');
-  fb.className = 'feedback';
-  fb.style.display = 'none';
-}
+  function parseRule(text) {
+    text = text.trim();
+    // normalize arrow
+    text = text.replace(/→/g, '->').replace(/−>/g, '->').replace(/=>/g, '->');
+    // normalize epsilon
+    text = text.replace(/ε/g, 'eps').replace(/\\epsilon/g, 'eps').replace(/\\e/g, 'eps');
+    var parts = text.split('->');
+    if (parts.length !== 2) return null;
+    var left = parts[0].trim();
+    var right = parts[1].trim();
+    if (!left) return null;
+    return { left: left, right: right || 'eps' };
+  }
 
-/* iframe resize messaging */
-function sendHeight() {
-  var h = document.documentElement.scrollHeight;
-  window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
-}
-var ro = new ResizeObserver(sendHeight);
-ro.observe(document.body);
-window.addEventListener('load', sendHeight);
+  function isNonterminal(ch) { return ch >= 'A' && ch <= 'Z'; }
+  function isTerminal(ch) { return (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9'); }
+
+  function classifyRule(left, right) {
+    // Parse symbols
+    var leftSyms = left.split('');
+    var rightStr = right === 'eps' ? '' : right;
+    var rightSyms = rightStr.split('');
+
+    var leftNonterms = leftSyms.filter(isNonterminal);
+    var leftTerms = leftSyms.filter(isTerminal);
+
+    // Must have at least one nonterminal on left
+    if (leftNonterms.length === 0) {
+      return { type: -1, reason: 'Levá strana musí obsahovat alespoň jeden neterminál.' };
+    }
+
+    // Check for S → ε special case
+    if (left.length === 1 && isNonterminal(left[0]) && rightStr === '') {
+      return { type: 3, reason: 'Speciální pravidlo: neterminál → ε (povoleno v regulární gramatice pro startovní symbol).' };
+    }
+
+    // Type 3 (regular): A → aB, A → a, A → ε
+    if (left.length === 1 && isNonterminal(left[0])) {
+      // Right-linear: A → wB or A → w (w = string of terminals)
+      if (rightSyms.length === 0) {
+        return { type: 3, reason: 'A → ε: regulární pravidlo.' };
+      }
+      // Check A → a (single terminal)
+      if (rightSyms.length === 1 && isTerminal(rightSyms[0])) {
+        return { type: 3, reason: 'A → a: regulární pravidlo (terminál).' };
+      }
+      // Check A → aB or A → a...aB (right-linear)
+      var lastIsNT = isNonterminal(rightSyms[rightSyms.length - 1]);
+      var allTermsBefore = rightSyms.slice(0, -1).every(isTerminal);
+      if (lastIsNT && allTermsBefore && rightSyms.length >= 2) {
+        return { type: 3, reason: 'A → w·B: pravolineární regulární pravidlo (terminály + neterminál na konci).' };
+      }
+      // Check A → w (all terminals)
+      if (rightSyms.every(isTerminal)) {
+        return { type: 3, reason: 'A → w: regulární pravidlo (samé terminály).' };
+      }
+      // Check left-linear: A → Ba or A → Bw
+      var firstIsNT = isNonterminal(rightSyms[0]);
+      var allTermsAfter = rightSyms.slice(1).every(isTerminal);
+      if (firstIsNT && allTermsAfter && rightSyms.length >= 2) {
+        return { type: 3, reason: 'A → B·w: levolineární regulární pravidlo.' };
+      }
+      // Context-free if single nonterminal on left
+      // Check if right has nonterminals mixed with terminals
+      var rightNTs = rightSyms.filter(isNonterminal);
+      if (rightNTs.length <= 1) {
+        // A → aNb style: nonterminal embedded in terminals
+        return { type: 2, reason: 'A → α: bezkontextové pravidlo (jeden neterminál na levé straně, ale pravá strana není lineární).' };
+      }
+      return { type: 2, reason: 'A → α: bezkontextové pravidlo (jeden neterminál na levé straně).' };
+    }
+
+    // Type 1 (context-sensitive): |left| <= |right|, and left = αAβ → αγβ pattern
+    if (left.length <= rightStr.length) {
+      // Check for context pattern
+      if (leftNonterms.length === 1 && leftTerms.length >= 1) {
+        return { type: 1, reason: 'αAβ → αγβ: kontextové pravidlo (|levá| ≤ |pravá|, neterminál v kontextu terminálů).' };
+      }
+      if (leftNonterms.length >= 2) {
+        return { type: 1, reason: '|levá| ≤ |pravá| a levá strana má více symbolů — kontextové pravidlo (typ 1).' };
+      }
+      return { type: 1, reason: '|levá| ≤ |pravá|: kontextové pravidlo.' };
+    }
+
+    // Type 0 (unrestricted): |left| > |right| (shortening rule)
+    return { type: 0, reason: '|levá| > |pravá|: zkracující pravidlo — neomezená gramatika (typ 0).' };
+  }
+
+  function addRule() {
+    var input = document.getElementById('ruleInput');
+    var parsed = parseRule(input.value);
+    if (!parsed) {
+      input.style.borderColor = '#dc3545';
+      setTimeout(function() { input.style.borderColor = '#ccc'; }, 800);
+      return;
+    }
+    var cls = classifyRule(parsed.left, parsed.right);
+    rules.push({ left: parsed.left, right: parsed.right, type: cls.type, reason: cls.reason });
+    input.value = '';
+    input.focus();
+    render();
+    resize();
+  }
+  window.addRule = addRule;
+
+  function addPreset(text) {
+    document.getElementById('ruleInput').value = text;
+    addRule();
+  }
+  window.addPreset = addPreset;
+
+  function removeRule(idx) {
+    rules.splice(idx, 1);
+    render();
+    resize();
+  }
+  window.removeRule = removeRule;
+
+  function clearAll() {
+    rules = [];
+    render();
+    resize();
+  }
+  window.clearAll = clearAll;
+
+  function render() {
+    var listEl = document.getElementById('ruleList');
+    if (rules.length === 0) {
+      listEl.innerHTML = '<div style="color:#999; font-size:13px;">Zatím žádná pravidla — přidejte je výše.</div>';
+    } else {
+      var html = '';
+      rules.forEach(function(r, i) {
+        var displayRight = r.right === 'eps' ? 'ε' : r.right;
+        var typeLabel = r.type === 3 ? 'Typ 3 — regulární' :
+                        r.type === 2 ? 'Typ 2 — bezkontextová' :
+                        r.type === 1 ? 'Typ 1 — kontextová' :
+                        r.type === 0 ? 'Typ 0 — neomezená' : 'Neplatné';
+        var typeCls = r.type === 3 ? 'type3' : r.type === 2 ? 'type2' :
+                      r.type === 1 ? 'type1' : r.type === 0 ? 'type0' : 'invalid';
+        html += '<div class="rule-card">' +
+          '<div class="rule-text">' + r.left + ' → ' + displayRight + '</div>' +
+          '<div class="classification">' +
+          '<span class="type-badge ' + typeCls + '">' + typeLabel + '</span>' +
+          '<div class="reason">' + r.reason + '</div>' +
+          '</div>' +
+          '<button class="rule-delete" onclick="removeRule(' + i + ')" title="Smazat">×</button>' +
+          '</div>';
+      });
+      listEl.innerHTML = html;
+    }
+
+    // Update counts
+    var counts = { 3: 0, 2: 0, 1: 0, 0: 0 };
+    rules.forEach(function(r) { if (counts.hasOwnProperty(r.type)) counts[r.type]++; });
+    document.getElementById('count3').textContent = counts[3];
+    document.getElementById('count2').textContent = counts[2];
+    document.getElementById('count1').textContent = counts[1];
+    document.getElementById('count0').textContent = counts[0];
+
+    // Highlight active segments
+    ['t3', 't2', 't1', 't0'].forEach(function(cls, i) {
+      var type = 3 - i;
+      var segs = document.querySelectorAll('.hier-seg.' + cls);
+      segs.forEach(function(seg) {
+        if (counts[type] > 0) seg.classList.add('active');
+        else seg.classList.remove('active');
+      });
+    });
+  }
+
+  render();
+  new ResizeObserver(function() { resize(); }).observe(document.documentElement);
+  resize();
+})();
 </script>
 </body>
 </html>
