@@ -51,383 +51,404 @@
 
 <p class="help-text">Tip: V režimu „Hrana" klikněte na zdrojový uzel, pak na cílový. V režimu „Smazat" klikněte na uzel nebo hranu.</p>
 
+<script src="exercises.js"></script>
 <script>
-(function() {
-  var nodes = [];
-  var edges = [];
-  var nodeId = 0;
-  var mode = 'node';
-  var directed = false;
-  var edgeStart = null;
-  var dragNode = null;
-  var dragOffset = { x: 0, y: 0 };
+// Interaktivni editor grafu - pridavani uzlu, hran, analyza vlastnosti
+// Podporuje orientovane i neorientovane grafy
 
-  var canvas = document.getElementById('canvas');
-  var edgeSvg = document.getElementById('edgeSvg');
+var nodes = [];
+var edges = [];
+var nodeId = 0;
+var mode = 'node';     // aktualni rezim: node/edge/move/delete
+var directed = false;
+var edgeStart = null;  // prvni uzel pri tvorbe hrany
+var dragNode = null;   // uzel ktery se prave presouva
+var dragOffset = { x: 0, y: 0 };
 
-  var challenges = [
-    { text: 'Sestavte strom se 4 uzly (souvislý, bez cyklů, 3 hrany)', check: function() {
-      return nodes.length === 4 && edges.length === 3 && isConnected() && !hasCycle();
-    }},
-    { text: 'Sestavte graf, který obsahuje cyklus', check: function() {
-      return nodes.length >= 3 && hasCycle();
-    }},
-    { text: 'Sestavte úplný graf K₃ (3 uzly, každý s každým)', check: function() {
-      if (nodes.length !== 3) return false;
-      var ids = nodes.map(function(n) { return n.id; });
-      for (var i = 0; i < ids.length; i++) {
-        for (var j = i + 1; j < ids.length; j++) {
-          if (!hasEdgeBetween(ids[i], ids[j])) return false;
+var canvas = $('canvas');
+var edgeSvg = $('edgeSvg');
+
+// Ukoly ktere student muze zkusit splnit
+var challenges = [
+  { text: 'Sestavte strom se 4 uzly (souvislý, bez cyklů, 3 hrany)', check: function() {
+    return nodes.length === 4 && edges.length === 3 && isConnected() && !hasCycle();
+  }},
+  { text: 'Sestavte graf, který obsahuje cyklus', check: function() {
+    return nodes.length >= 3 && hasCycle();
+  }},
+  { text: 'Sestavte úplný graf K₃ (3 uzly, každý s každým)', check: function() {
+    if (nodes.length !== 3) return false;
+    var ids = nodes.map(function(n) { return n.id; });
+    // overit ze mezi kazdou dvojici existuje hrana
+    for (var i = 0; i < ids.length; i++) {
+      for (var j = i + 1; j < ids.length; j++) {
+        if (!hasEdgeBetween(ids[i], ids[j])) return false;
+      }
+    }
+    return true;
+  }}
+];
+
+// Prepnuti rezimu editace
+function setMode(m) {
+  mode = m;
+  edgeStart = null;
+  nodes.forEach(function(n) { n.el.classList.remove('selected'); });
+  document.querySelectorAll('.btn').forEach(function(b) { b.classList.remove('active'); });
+  var btnMap = { node: 'btnNode', edge: 'btnEdge', delete: 'btnDelete', move: 'btnMove' };
+  if (btnMap[m]) $(btnMap[m]).classList.add('active');
+  canvas.className = 'canvas-wrap mode-' + m;
+}
+
+// Klik na platno = novy uzel (jen v rezimu 'node')
+canvas.addEventListener('click', function(e) {
+  if (mode !== 'node') return;
+  if (e.target !== canvas && e.target !== edgeSvg && e.target.tagName !== 'svg') return;
+  var rect = canvas.getBoundingClientRect();
+  var x = e.clientX - rect.left;
+  var y = e.clientY - rect.top;
+  addNode(x, y);
+});
+
+// Zacatek presunu uzlu
+canvas.addEventListener('mousedown', function(e) {
+  if (mode !== 'move') return;
+  var nodeEl = e.target.closest('.node');
+  if (!nodeEl) return;
+  var node = nodes.find(function(n) { return n.el === nodeEl; });
+  if (!node) return;
+  dragNode = node;
+  var rect = canvas.getBoundingClientRect();
+  dragOffset.x = e.clientX - rect.left - node.x;
+  dragOffset.y = e.clientY - rect.top - node.y;
+  e.preventDefault();
+});
+
+// Presun uzlu - orezat na hranice platna
+document.addEventListener('mousemove', function(e) {
+  if (!dragNode) return;
+  var rect = canvas.getBoundingClientRect();
+  dragNode.x = Math.max(20, Math.min(rect.width - 20, e.clientX - rect.left - dragOffset.x));
+  dragNode.y = Math.max(20, Math.min(rect.height - 20, e.clientY - rect.top - dragOffset.y));
+  dragNode.el.style.left = dragNode.x + 'px';
+  dragNode.el.style.top = dragNode.y + 'px';
+  renderEdges();
+});
+
+document.addEventListener('mouseup', function() { dragNode = null; });
+
+// Pridani noveho uzlu na pozici [x, y]
+function addNode(x, y) {
+  var id = nodeId++;
+  var nodeEl = el('div', { cls: 'node', text: 'v' + id });
+  nodeEl.style.left = x + 'px';
+  nodeEl.style.top = y + 'px';
+  nodeEl.addEventListener('click', function(e) {
+    e.stopPropagation();
+    onNodeClick(id);
+  });
+  canvas.appendChild(nodeEl);
+  var node = { id: id, x: x, y: y, el: nodeEl };
+  nodes.push(node);
+  analyze();
+  notifyResize();
+}
+
+// Klik na uzel - bud smazat, nebo vytvorit hranu (dva kliky)
+function onNodeClick(id) {
+  if (mode === 'delete') {
+    removeNode(id);
+  } else if (mode === 'edge') {
+    if (edgeStart === null) {
+      // prvni klik - zapamatovat si zdrojovy uzel
+      edgeStart = id;
+      var n = nodes.find(function(n) { return n.id === id; });
+      if (n) n.el.classList.add('selected');
+    } else {
+      // druhy klik - vytvorit hranu (pokud jeste neexistuje)
+      if (edgeStart !== id) {
+        if (!edgeExists(edgeStart, id)) {
+          edges.push({ from: edgeStart, to: id });
         }
       }
-      return true;
-    }}
-  ];
-
-  function resize() {
-    parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
+      nodes.forEach(function(n) { n.el.classList.remove('selected'); });
+      edgeStart = null;
+      renderEdges();
+      analyze();
+      notifyResize();
+    }
   }
+}
 
-  function setMode(m) {
-    mode = m;
-    edgeStart = null;
-    nodes.forEach(function(n) { n.el.classList.remove('selected'); });
-    document.querySelectorAll('.btn').forEach(function(b) { b.classList.remove('active'); });
-    var btnMap = { node: 'btnNode', edge: 'btnEdge', delete: 'btnDelete', move: 'btnMove' };
-    if (btnMap[m]) document.getElementById(btnMap[m]).classList.add('active');
-    canvas.className = 'canvas-wrap mode-' + m;
+// Smazani uzlu a vsech jeho hran
+function removeNode(id) {
+  edges = edges.filter(function(e) { return e.from !== id && e.to !== id; });
+  var idx = nodes.findIndex(function(n) { return n.id === id; });
+  if (idx >= 0) {
+    nodes[idx].el.remove();
+    nodes.splice(idx, 1);
   }
-  window.setMode = setMode;
+  renderEdges();
+  analyze();
+  notifyResize();
+}
 
-  canvas.addEventListener('click', function(e) {
-    if (mode !== 'node') return;
-    if (e.target !== canvas && e.target !== edgeSvg && e.target.tagName !== 'svg') return;
-    var rect = canvas.getBoundingClientRect();
-    var x = e.clientX - rect.left;
-    var y = e.clientY - rect.top;
-    addNode(x, y);
+// Kontrola jestli hrana uz existuje (bere v potaz orientovanost)
+function edgeExists(a, b) {
+  return edges.some(function(e) {
+    if (directed) return e.from === a && e.to === b;
+    return (e.from === a && e.to === b) || (e.from === b && e.to === a);
   });
+}
 
-  canvas.addEventListener('mousedown', function(e) {
-    if (mode !== 'move') return;
-    var el = e.target.closest('.node');
-    if (!el) return;
-    var node = nodes.find(function(n) { return n.el === el; });
-    if (!node) return;
-    dragNode = node;
-    var rect = canvas.getBoundingClientRect();
-    dragOffset.x = e.clientX - rect.left - node.x;
-    dragOffset.y = e.clientY - rect.top - node.y;
-    e.preventDefault();
+// Kontrola hrany obousmerne (pro K3 challenge)
+function hasEdgeBetween(a, b) {
+  return edges.some(function(e) {
+    return (e.from === a && e.to === b) || (e.from === b && e.to === a);
   });
+}
 
-  document.addEventListener('mousemove', function(e) {
-    if (!dragNode) return;
-    var rect = canvas.getBoundingClientRect();
-    dragNode.x = Math.max(20, Math.min(rect.width - 20, e.clientX - rect.left - dragOffset.x));
-    dragNode.y = Math.max(20, Math.min(rect.height - 20, e.clientY - rect.top - dragOffset.y));
-    dragNode.el.style.left = dragNode.x + 'px';
-    dragNode.el.style.top = dragNode.y + 'px';
-    renderEdges();
-  });
+// Vykresleni hran jako SVG cary
+function renderEdges() {
+  // smazat vsechny cary krome <defs>
+  while (edgeSvg.childNodes.length > 1) edgeSvg.removeChild(edgeSvg.lastChild);
+  edges.forEach(function(e, idx) {
+    var nf = nodes.find(function(n) { return n.id === e.from; });
+    var nt = nodes.find(function(n) { return n.id === e.to; });
+    if (!nf || !nt) return;
 
-  document.addEventListener('mouseup', function() { dragNode = null; });
+    // vypocet bodu na okraji uzlu (ne ve stredu) aby cara nekoncila pod uzlem
+    var dx = nt.x - nf.x, dy = nt.y - nf.y;
+    var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    var r = 20; // polomer uzlu
+    var x1 = nf.x + (dx / dist) * r;
+    var y1 = nf.y + (dy / dist) * r;
+    var x2 = nt.x - (dx / dist) * r;
+    var y2 = nt.y - (dy / dist) * r;
 
-  function addNode(x, y) {
-    var id = nodeId++;
-    var el = document.createElement('div');
-    el.className = 'node';
-    el.textContent = 'v' + id;
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    el.addEventListener('click', function(e) {
-      e.stopPropagation();
-      onNodeClick(id);
-    });
-    canvas.appendChild(el);
-    var node = { id: id, x: x, y: y, el: el };
-    nodes.push(node);
-    analyze();
-    resize();
-  }
-
-  function onNodeClick(id) {
-    if (mode === 'delete') {
-      removeNode(id);
-    } else if (mode === 'edge') {
-      if (edgeStart === null) {
-        edgeStart = id;
-        var n = nodes.find(function(n) { return n.id === id; });
-        if (n) n.el.classList.add('selected');
-      } else {
-        if (edgeStart !== id) {
-          if (!edgeExists(edgeStart, id)) {
-            edges.push({ from: edgeStart, to: id });
-          }
-        }
-        nodes.forEach(function(n) { n.el.classList.remove('selected'); });
-        edgeStart = null;
+    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x1);
+    line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2);
+    line.setAttribute('y2', y2);
+    line.setAttribute('stroke', '#555');
+    line.setAttribute('stroke-width', '2');
+    if (directed) line.setAttribute('marker-end', 'url(#arrowhead)');
+    line.style.pointerEvents = 'stroke';
+    line.style.cursor = mode === 'delete' ? 'not-allowed' : 'default';
+    line.setAttribute('data-edge', idx);
+    // klik na hranu v delete rezimu ji smaze
+    line.addEventListener('click', function() {
+      if (mode === 'delete') {
+        edges.splice(idx, 1);
         renderEdges();
         analyze();
-        resize();
-      }
-    }
-  }
-
-  function removeNode(id) {
-    edges = edges.filter(function(e) { return e.from !== id && e.to !== id; });
-    var idx = nodes.findIndex(function(n) { return n.id === id; });
-    if (idx >= 0) {
-      nodes[idx].el.remove();
-      nodes.splice(idx, 1);
-    }
-    renderEdges();
-    analyze();
-    resize();
-  }
-
-  function edgeExists(a, b) {
-    return edges.some(function(e) {
-      if (directed) return e.from === a && e.to === b;
-      return (e.from === a && e.to === b) || (e.from === b && e.to === a);
-    });
-  }
-
-  function hasEdgeBetween(a, b) {
-    return edges.some(function(e) {
-      return (e.from === a && e.to === b) || (e.from === b && e.to === a);
-    });
-  }
-
-  function renderEdges() {
-    while (edgeSvg.childNodes.length > 1) edgeSvg.removeChild(edgeSvg.lastChild);
-    edges.forEach(function(e, idx) {
-      var nf = nodes.find(function(n) { return n.id === e.from; });
-      var nt = nodes.find(function(n) { return n.id === e.to; });
-      if (!nf || !nt) return;
-
-      var dx = nt.x - nf.x, dy = nt.y - nf.y;
-      var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      var r = 20;
-      var x1 = nf.x + (dx / dist) * r;
-      var y1 = nf.y + (dy / dist) * r;
-      var x2 = nt.x - (dx / dist) * r;
-      var y2 = nt.y - (dy / dist) * r;
-
-      var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', x1);
-      line.setAttribute('y1', y1);
-      line.setAttribute('x2', x2);
-      line.setAttribute('y2', y2);
-      line.setAttribute('stroke', '#555');
-      line.setAttribute('stroke-width', '2');
-      if (directed) line.setAttribute('marker-end', 'url(#arrowhead)');
-      line.style.pointerEvents = 'stroke';
-      line.style.cursor = mode === 'delete' ? 'not-allowed' : 'default';
-      line.setAttribute('data-edge', idx);
-      line.addEventListener('click', function() {
-        if (mode === 'delete') {
-          edges.splice(idx, 1);
-          renderEdges();
-          analyze();
-          resize();
-        }
-      });
-      edgeSvg.appendChild(line);
-    });
-  }
-
-  function toggleDirected() {
-    directed = document.getElementById('directedToggle').checked;
-    renderEdges();
-    analyze();
-  }
-  window.toggleDirected = toggleDirected;
-
-  function clearAll() {
-    nodes.forEach(function(n) { n.el.remove(); });
-    nodes = [];
-    edges = [];
-    nodeId = 0;
-    edgeStart = null;
-    renderEdges();
-    analyze();
-    resize();
-  }
-  window.clearAll = clearAll;
-
-  /* ---- Graph analysis ---- */
-  function adj() {
-    var a = {};
-    nodes.forEach(function(n) { a[n.id] = []; });
-    edges.forEach(function(e) {
-      a[e.from].push(e.to);
-      if (!directed) a[e.to].push(e.from);
-    });
-    return a;
-  }
-
-  function adjUndirected() {
-    var a = {};
-    nodes.forEach(function(n) { a[n.id] = []; });
-    edges.forEach(function(e) {
-      a[e.from].push(e.to);
-      a[e.to].push(e.from);
-    });
-    return a;
-  }
-
-  function isConnected() {
-    if (nodes.length <= 1) return true;
-    var a = adjUndirected();
-    var visited = {};
-    var queue = [nodes[0].id];
-    visited[nodes[0].id] = true;
-    while (queue.length) {
-      var cur = queue.shift();
-      a[cur].forEach(function(nb) {
-        if (!visited[nb]) { visited[nb] = true; queue.push(nb); }
-      });
-    }
-    return Object.keys(visited).length === nodes.length;
-  }
-
-  function hasCycle() {
-    if (directed) return hasCycleDirected();
-    return hasCycleUndirected();
-  }
-
-  function hasCycleUndirected() {
-    var a = adjUndirected();
-    var visited = {};
-    for (var i = 0; i < nodes.length; i++) {
-      if (visited[nodes[i].id]) continue;
-      if (dfsCycleUndir(nodes[i].id, -1, visited, a)) return true;
-    }
-    return false;
-  }
-
-  function dfsCycleUndir(v, parent, visited, a) {
-    visited[v] = true;
-    for (var i = 0; i < a[v].length; i++) {
-      var nb = a[v][i];
-      if (!visited[nb]) {
-        if (dfsCycleUndir(nb, v, visited, a)) return true;
-      } else if (nb !== parent) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function hasCycleDirected() {
-    var a = adj();
-    var color = {}; // 0=white, 1=gray, 2=black
-    nodes.forEach(function(n) { color[n.id] = 0; });
-    for (var i = 0; i < nodes.length; i++) {
-      if (color[nodes[i].id] === 0) {
-        if (dfsCycleDir(nodes[i].id, color, a)) return true;
-      }
-    }
-    return false;
-  }
-
-  function dfsCycleDir(v, color, a) {
-    color[v] = 1;
-    for (var i = 0; i < a[v].length; i++) {
-      var nb = a[v][i];
-      if (color[nb] === 1) return true;
-      if (color[nb] === 0 && dfsCycleDir(nb, color, a)) return true;
-    }
-    color[v] = 2;
-    return false;
-  }
-
-  function degrees() {
-    var deg = {};
-    nodes.forEach(function(n) { deg[n.id] = { in: 0, out: 0 }; });
-    edges.forEach(function(e) {
-      deg[e.from].out++;
-      deg[e.to].in++;
-      if (!directed) { deg[e.to].out++; deg[e.from].in++; }
-    });
-    return deg;
-  }
-
-  function isTree() {
-    return nodes.length >= 1 && edges.length === nodes.length - 1 && isConnected() && !hasCycle();
-  }
-
-  function componentCount() {
-    var a = adjUndirected();
-    var visited = {};
-    var count = 0;
-    nodes.forEach(function(n) {
-      if (!visited[n.id]) {
-        count++;
-        var queue = [n.id];
-        visited[n.id] = true;
-        while (queue.length) {
-          var cur = queue.shift();
-          a[cur].forEach(function(nb) {
-            if (!visited[nb]) { visited[nb] = true; queue.push(nb); }
-          });
-        }
+        notifyResize();
       }
     });
-    return count;
-  }
+    edgeSvg.appendChild(line);
+  });
+}
 
-  function analyze() {
-    var propsEl = document.getElementById('props');
-    if (nodes.length === 0) {
-      propsEl.innerHTML = '<div class="prop" style="color:#999;">Přidejte uzly kliknutím na plátno.</div>';
-      renderChallenges();
-      return;
-    }
-
-    var connected = isConnected();
-    var tree = isTree();
-    var cyclic = hasCycle();
-    var comps = componentCount();
-    var deg = degrees();
-    var maxDeg = 0;
-    nodes.forEach(function(n) {
-      var d = directed ? deg[n.id].in + deg[n.id].out : deg[n.id].out;
-      if (d > maxDeg) maxDeg = d;
-    });
-
-    var html = '';
-    html += prop(connected, 'Souvislý', connected ? 'Ano — všechny uzly jsou dosažitelné' : 'Ne — graf má ' + comps + ' komponent(y)');
-    html += prop(!cyclic, 'Acyklický', cyclic ? 'Ne — graf obsahuje cyklus' : 'Ano — neobsahuje cyklus');
-    html += prop(tree, 'Strom', tree ? 'Ano — souvislý, acyklický, |E| = |V| − 1' : 'Ne');
-    html += '<div class="prop" style="color:#555;">Uzly: ' + nodes.length + ' &nbsp;|&nbsp; Hrany: ' + edges.length + ' &nbsp;|&nbsp; Typ: ' + (directed ? 'orientovaný' : 'neorientovaný') + '</div>';
-
-    propsEl.innerHTML = html;
-    renderChallenges();
-  }
-
-  function prop(ok, label, detail) {
-    return '<div class="prop"><span class="dot ' + (ok ? 'yes' : 'no') + '"></span><strong>' + label + ':</strong> ' + detail + '</div>';
-  }
-
-  function renderChallenges() {
-    var el = document.getElementById('challenges');
-    var html = '';
-    challenges.forEach(function(c, i) {
-      var done = c.check();
-      html += '<div class="task">' + (i + 1) + '. ' + c.text +
-        ' <span class="status ' + (done ? 'done' : 'pending') + '">' +
-        (done ? '✓ Splněno' : '…') + '</span></div>';
-    });
-    el.innerHTML = html;
-  }
-
+function toggleDirected() {
+  directed = $('directedToggle').checked;
+  renderEdges();
   analyze();
+}
 
-  new ResizeObserver(function() { resize(); }).observe(document.documentElement);
-  resize();
-})();
+function clearAll() {
+  nodes.forEach(function(n) { n.el.remove(); });
+  nodes = [];
+  edges = [];
+  nodeId = 0;
+  edgeStart = null;
+  renderEdges();
+  analyze();
+  notifyResize();
+}
+
+/* ---- Analyza grafu ---- */
+
+// Sestavi seznam sousednosti (respektuje orientovanost)
+function adj() {
+  var a = {};
+  nodes.forEach(function(n) { a[n.id] = []; });
+  edges.forEach(function(e) {
+    a[e.from].push(e.to);
+    if (!directed) a[e.to].push(e.from);
+  });
+  return a;
+}
+
+// Seznam sousednosti vzdy neorientovany (pro souvislost)
+function adjUndirected() {
+  var a = {};
+  nodes.forEach(function(n) { a[n.id] = []; });
+  edges.forEach(function(e) {
+    a[e.from].push(e.to);
+    a[e.to].push(e.from);
+  });
+  return a;
+}
+
+// BFS test souvislosti
+function isConnected() {
+  if (nodes.length <= 1) return true;
+  var a = adjUndirected();
+  var visited = {};
+  var queue = [nodes[0].id];
+  visited[nodes[0].id] = true;
+  while (queue.length) {
+    var cur = queue.shift();
+    a[cur].forEach(function(nb) {
+      if (!visited[nb]) { visited[nb] = true; queue.push(nb); }
+    });
+  }
+  return Object.keys(visited).length === nodes.length;
+}
+
+function hasCycle() {
+  if (directed) return hasCycleDirected();
+  return hasCycleUndirected();
+}
+
+// Detekce cyklu v neorientovanem grafu pomoci DFS
+function hasCycleUndirected() {
+  var a = adjUndirected();
+  var visited = {};
+  for (var i = 0; i < nodes.length; i++) {
+    if (visited[nodes[i].id]) continue;
+    if (dfsCycleUndir(nodes[i].id, -1, visited, a)) return true;
+  }
+  return false;
+}
+
+// DFS - kdyz narazim na navstiveny uzel ktery neni rodic, je tam cyklus
+function dfsCycleUndir(v, parent, visited, a) {
+  visited[v] = true;
+  for (var i = 0; i < a[v].length; i++) {
+    var nb = a[v][i];
+    if (!visited[nb]) {
+      if (dfsCycleUndir(nb, v, visited, a)) return true;
+    } else if (nb !== parent) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Detekce cyklu v orientovanem grafu - barveni uzlu (white/gray/black)
+function hasCycleDirected() {
+  var a = adj();
+  var color = {}; // 0=white, 1=gray, 2=black
+  nodes.forEach(function(n) { color[n.id] = 0; });
+  for (var i = 0; i < nodes.length; i++) {
+    if (color[nodes[i].id] === 0) {
+      if (dfsCycleDir(nodes[i].id, color, a)) return true;
+    }
+  }
+  return false;
+}
+
+// Kdyz narazim na sedy uzel, nasel jsem zpetnou hranu = cyklus
+function dfsCycleDir(v, color, a) {
+  color[v] = 1;
+  for (var i = 0; i < a[v].length; i++) {
+    var nb = a[v][i];
+    if (color[nb] === 1) return true;
+    if (color[nb] === 0 && dfsCycleDir(nb, color, a)) return true;
+  }
+  color[v] = 2;
+  return false;
+}
+
+// Vypocet stupnu uzlu
+function degrees() {
+  var deg = {};
+  nodes.forEach(function(n) { deg[n.id] = { in: 0, out: 0 }; });
+  edges.forEach(function(e) {
+    deg[e.from].out++;
+    deg[e.to].in++;
+    if (!directed) { deg[e.to].out++; deg[e.from].in++; }
+  });
+  return deg;
+}
+
+// Strom = souvisly, acyklicky, |E| = |V| - 1
+function isTree() {
+  return nodes.length >= 1 && edges.length === nodes.length - 1 && isConnected() && !hasCycle();
+}
+
+// Pocet komponent souvislosti (BFS pro kazdou nenavstivenou)
+function componentCount() {
+  var a = adjUndirected();
+  var visited = {};
+  var count = 0;
+  nodes.forEach(function(n) {
+    if (!visited[n.id]) {
+      count++;
+      var queue = [n.id];
+      visited[n.id] = true;
+      while (queue.length) {
+        var cur = queue.shift();
+        a[cur].forEach(function(nb) {
+          if (!visited[nb]) { visited[nb] = true; queue.push(nb); }
+        });
+      }
+    }
+  });
+  return count;
+}
+
+// Hlavni analyza - spocita vse a zobrazi vlastnosti grafu
+function analyze() {
+  var propsEl = $('props');
+  if (nodes.length === 0) {
+    propsEl.innerHTML = '<div class="prop" style="color:#999;">Přidejte uzly kliknutím na plátno.</div>';
+    renderChallenges();
+    return;
+  }
+
+  var connected = isConnected();
+  var tree = isTree();
+  var cyclic = hasCycle();
+  var comps = componentCount();
+  var deg = degrees();
+  var maxDeg = 0;
+  nodes.forEach(function(n) {
+    var d = directed ? deg[n.id].in + deg[n.id].out : deg[n.id].out;
+    if (d > maxDeg) maxDeg = d;
+  });
+
+  var html = '';
+  html += prop(connected, 'Souvislý', connected ? 'Ano — všechny uzly jsou dosažitelné' : 'Ne — graf má ' + comps + ' komponent(y)');
+  html += prop(!cyclic, 'Acyklický', cyclic ? 'Ne — graf obsahuje cyklus' : 'Ano — neobsahuje cyklus');
+  html += prop(tree, 'Strom', tree ? 'Ano — souvislý, acyklický, |E| = |V| − 1' : 'Ne');
+  html += '<div class="prop" style="color:#555;">Uzly: ' + nodes.length + ' &nbsp;|&nbsp; Hrany: ' + edges.length + ' &nbsp;|&nbsp; Typ: ' + (directed ? 'orientovaný' : 'neorientovaný') + '</div>';
+
+  propsEl.innerHTML = html;
+  renderChallenges();
+}
+
+// Helper pro zobrazeni jedne vlastnosti s teckou ok/no
+function prop(ok, label, detail) {
+  return '<div class="prop"><span class="dot ' + (ok ? 'yes' : 'no') + '"></span><strong>' + label + ':</strong> ' + detail + '</div>';
+}
+
+// Vykresleni ukolu a jestli jsou splnene
+function renderChallenges() {
+  var challEl = $('challenges');
+  var html = '';
+  challenges.forEach(function(c, i) {
+    var done = c.check();
+    html += '<div class="task">' + (i + 1) + '. ' + c.text +
+      ' <span class="status ' + (done ? 'done' : 'pending') + '">' +
+      (done ? '✓ Splněno' : '…') + '</span></div>';
+  });
+  challEl.innerHTML = html;
+}
+
+analyze();
 </script>
 </body>
 </html>

@@ -26,7 +26,11 @@
   <div id="historyText">Zelená</div>
 </div>
 
+<script src="exercises.js"></script>
 <script>
+// Simulace semaforu jako konecneho automatu
+// Stavy: zelena -> zluta -> cervena -> zelena (cyklicky)
+
 var states = [
   { id: 'green', label: 'Zelená' },
   { id: 'yellow', label: 'Žlutá' },
@@ -35,18 +39,20 @@ var states = [
 var current = 0;
 var history = ['Zelená'];
 
+// Aktualizace zobrazeni svetel a historie prechodu
 function render() {
   states.forEach(function(s, i) {
-    var el = document.getElementById('light-' + s.id);
+    var light = $('light-' + s.id);
     if (i === current) {
-      el.className = 'light ' + s.id + ' active';
+      light.className = 'light ' + s.id + ' active';
     } else {
-      el.className = 'light ' + s.id + ' inactive';
+      light.className = 'light ' + s.id + ' inactive';
     }
   });
-  document.getElementById('historyText').textContent = history.join(' \u2192 ');
+  $('historyText').textContent = history.join(' \u2192 ');
 }
 
+// Prechod do dalsiho stavu (modulo 3 = cyklicky)
 function advance() {
   current = (current + 1) % 3;
   history.push(states[current].label);
@@ -58,15 +64,6 @@ function resetAll() {
   history = ['Zelená'];
   render();
 }
-
-/* iframe resize messaging */
-function sendHeight() {
-  var h = document.documentElement.scrollHeight;
-  window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
-}
-var ro = new ResizeObserver(sendHeight);
-ro.observe(document.body);
-window.addEventListener('load', sendHeight);
 </script>
 </body>
 </html>

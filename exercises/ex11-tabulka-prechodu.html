@@ -41,14 +41,20 @@ td.state { font-weight: 600; text-align: left; white-space: nowrap; }
 
 <div id="feedback" class="feedback"></div>
 
+<script src="exercises.js"></script>
 <script>
-const correct = { q0a:'q1', q0b:'q0', q1a:'q1', q1b:'q2', q2a:'q2', q2b:'q2' };
+// Cviceni na vyplneni tabulky prechodu pro DFA
+// Uzivatel vybira spravne prechody z dropdownu pro kazdy stav a symbol
 
+// Spravne hodnoty prechodove funkce delta
+var correct = { q0a:'q1', q0b:'q0', q1a:'q1', q1b:'q2', q2a:'q2', q2b:'q2' };
+
+// Projde vsechny selecty a porovna s ocekavanym prechodem
 function checkAnswers() {
-  let score = 0;
-  const selects = document.querySelectorAll('select[data-key]');
+  var score = 0;
+  var selects = document.querySelectorAll('select[data-key]');
   selects.forEach(function(sel) {
-    var key = sel.getAttribute('data-key');
+    var key = sel.getAttribute('data-key'); // napr. "q0a" = stav q0, symbol a
     var td = sel.parentElement;
     td.classList.remove('cell-correct','cell-incorrect');
     if (sel.value === correct[key]) {
@@ -58,7 +64,7 @@ function checkAnswers() {
       td.classList.add('cell-incorrect');
     }
   });
-  var fb = document.getElementById('feedback');
+  var fb = $('feedback');
   if (score === 6) {
     fb.className = 'feedback correct';
     fb.textContent = 'Výborně! Všechny odpovědi jsou správné.';
@@ -73,19 +79,10 @@ function resetAll() {
     sel.value = '';
     sel.parentElement.classList.remove('cell-correct','cell-incorrect');
   });
-  var fb = document.getElementById('feedback');
+  var fb = $('feedback');
   fb.className = 'feedback';
   fb.style.display = 'none';
 }
-
-/* iframe resize messaging */
-function sendHeight() {
-  var h = document.documentElement.scrollHeight;
-  window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
-}
-var ro = new ResizeObserver(sendHeight);
-ro.observe(document.body);
-window.addEventListener('load', sendHeight);
 </script>
 </body>
 </html>

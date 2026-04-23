@@ -73,145 +73,137 @@ table.data td.highlight { background: #fff3cd; }
   Moorův automat produkuje výstup při vstupu do stavu — výstupní řetězec je o 1 delší (zahrnuje počáteční stav).
 </div>
 
+<script src="exercises.js"></script>
 <script>
-(function() {
-  var mealyDelta = {
-    'S': { '0': { next: 'S', out: 'S' }, '1': { next: 'L', out: 'L' } },
-    'L': { '0': { next: 'L', out: 'L' }, '1': { next: 'S', out: 'S' } }
-  };
+// Simulator Mealyho a Moorova automatu - detektor parity (sudy/lichy pocet jednicek)
+// Oba automaty bezi paralelne, aby slo porovnat vystupy
 
-  var mooreDelta = {
-    'S': { '0': 'S', '1': 'L' },
-    'L': { '0': 'L', '1': 'S' }
-  };
-  var mooreOutput = { 'S': 'S', 'L': 'L' };
+// Mealy: vystup zavisi na prechodu (stav + vstupni symbol)
+var mealyDelta = {
+  'S': { '0': { next: 'S', out: 'S' }, '1': { next: 'L', out: 'L' } },
+  'L': { '0': { next: 'L', out: 'L' }, '1': { next: 'S', out: 'S' } }
+};
 
-  var mode = 'mealy'; // or 'moore'
-  var inputSeq = [];
-  var mealyStates = ['S'];
-  var mealyOutputs = [];
-  var mooreStates = ['S'];
-  var mooreOutputs = ['S']; // initial state output
+// Moore: vystup zavisi jen na stavu
+var mooreDelta = {
+  'S': { '0': 'S', '1': 'L' },
+  'L': { '0': 'L', '1': 'S' }
+};
+var mooreOutput = { 'S': 'S', 'L': 'L' };
 
-  function resize() {
-    parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
-  }
+var mode = 'mealy';
+var inputSeq = [];
+var mealyStates = ['S'];
+var mealyOutputs = [];
+var mooreStates = ['S'];
+var mooreOutputs = ['S']; // Moore ma vystup uz v pocatecnim stavu
 
-  function switchMode(m) {
-    mode = m;
-    document.getElementById('tabMealy').className = 'tab' + (m === 'mealy' ? ' active' : '');
-    document.getElementById('tabMoore').className = 'tab' + (m === 'moore' ? ' active' : '');
-    document.getElementById('mealyInfo').style.display = m === 'mealy' ? '' : 'none';
-    document.getElementById('mooreInfo').style.display = m === 'moore' ? '' : 'none';
-    render();
-    resize();
-  }
-  window.switchMode = switchMode;
+// Prepnuti mezi Mealy a Moore zobrazenim
+function switchMode(m) {
+  mode = m;
+  $('tabMealy').className = 'tab' + (m === 'mealy' ? ' active' : '');
+  $('tabMoore').className = 'tab' + (m === 'moore' ? ' active' : '');
+  $('mealyInfo').style.display = m === 'mealy' ? '' : 'none';
+  $('mooreInfo').style.display = m === 'moore' ? '' : 'none';
+  render();
+}
 
-  function feedSymbol(sym) {
-    inputSeq.push(sym);
+// Zpracovani jednoho vstupniho symbolu - pocita prechod pro oba automaty soucasne
+function feedSymbol(sym) {
+  inputSeq.push(sym);
 
-    // Mealy step
-    var mCur = mealyStates[mealyStates.length - 1];
-    var mTrans = mealyDelta[mCur][sym];
-    mealyStates.push(mTrans.next);
-    mealyOutputs.push(mTrans.out);
+  // Mealy: vystup se generuje pri prechodu
+  var mCur = mealyStates[mealyStates.length - 1];
+  var mTrans = mealyDelta[mCur][sym];
+  mealyStates.push(mTrans.next);
+  mealyOutputs.push(mTrans.out);
 
-    // Moore step
-    var oCur = mooreStates[mooreStates.length - 1];
-    var oNext = mooreDelta[oCur][sym];
-    mooreStates.push(oNext);
-    mooreOutputs.push(mooreOutput[oNext]);
-
-    render();
-    resize();
-  }
-  window.feedSymbol = feedSymbol;
-
-  function resetSim() {
-    inputSeq = [];
-    mealyStates = ['S'];
-    mealyOutputs = [];
-    mooreStates = ['S'];
-    mooreOutputs = ['S'];
-    render();
-    resize();
-  }
-  window.resetSim = resetSim;
-
-  function render() {
-    var states = mode === 'mealy' ? mealyStates : mooreStates;
-    var outputs = mode === 'mealy' ? mealyOutputs : mooreOutputs;
-
-    var html = '';
-    if (inputSeq.length === 0) {
-      var initState = states[0];
-      html += '<div style="color:#888; font-size:13px;">Počáteční stav: <strong>' + initState + '</strong>';
-      if (mode === 'moore') {
-        html += ' → výstup: <strong>' + mooreOutput[initState] + '</strong> (Moorův automat produkuje výstup i v počátečním stavu)';
-      }
-      html += '</div>';
-    } else {
-      html += '<div class="output-display">';
-      // For Moore, show initial state output
-      if (mode === 'moore') {
-        html += '<div class="step-box">';
-        html += '<div class="step-state">start</div>';
-        html += '<div class="step-output">' + mooreOutputs[0] + '</div>';
-        html += '</div>';
-      }
-      for (var i = 0; i < inputSeq.length; i++) {
-        if (mode === 'moore' || i > 0) {
-          html += '<div class="step-arrow">→</div>';
-        }
-        html += '<div class="step-box">';
-        html += '<div class="step-state">' + states[i] + '→' + states[i + 1] + '</div>';
-        html += '<div class="step-input">' + inputSeq[i] + '</div>';
-        if (mode === 'mealy') {
-          html += '<div class="step-output">' + mealyOutputs[i] + '</div>';
-        } else {
-          html += '<div class="step-output">' + mooreOutputs[i + 1] + '</div>';
-        }
-        html += '</div>';
-      }
-      html += '</div>';
-    }
-    document.getElementById('stepDisplay').innerHTML = html;
-
-    // Summary
-    var sumHtml = '';
-    if (inputSeq.length > 0) {
-      sumHtml += '<div class="summary-item"><strong>Vstup:</strong> ' + inputSeq.join('') + '</div>';
-      if (mode === 'mealy') {
-        sumHtml += '<div class="summary-item"><strong>Výstup (Mealy):</strong> ' + mealyOutputs.join('') +
-          ' <span style="color:#888; font-size:11px;">(délka = ' + mealyOutputs.length + ')</span></div>';
-      } else {
-        sumHtml += '<div class="summary-item"><strong>Výstup (Moore):</strong> ' + mooreOutputs.join('') +
-          ' <span style="color:#888; font-size:11px;">(délka = ' + mooreOutputs.length + ')</span></div>';
-      }
-    }
-    document.getElementById('summaryRow').innerHTML = sumHtml;
-
-    // Comparison (always show both)
-    var compHtml = '';
-    if (inputSeq.length > 0) {
-      compHtml += '<div class="comp-card mealy"><h4>Mealyho automat</h4>';
-      compHtml += '<div style="font-size:12px;">Výstup při přechodech</div>';
-      compHtml += '<div class="out">' + inputSeq.join('') + ' → ' + mealyOutputs.join('') + '</div>';
-      compHtml += '<div style="font-size:11px; color:#888; margin-top:4px;">Délka výstupu = délka vstupu = ' + inputSeq.length + '</div></div>';
-
-      compHtml += '<div class="comp-card moore"><h4>Moorův automat</h4>';
-      compHtml += '<div style="font-size:12px;">Výstup ze stavů (včetně počátečního)</div>';
-      compHtml += '<div class="out">' + inputSeq.join('') + ' → ' + mooreOutputs.join('') + '</div>';
-      compHtml += '<div style="font-size:11px; color:#888; margin-top:4px;">Délka výstupu = délka vstupu + 1 = ' + mooreOutputs.length + '</div></div>';
-    }
-    document.getElementById('comparisonArea').innerHTML = compHtml;
-  }
+  // Moore: vystup se generuje pri vstupu do noveho stavu
+  var oCur = mooreStates[mooreStates.length - 1];
+  var oNext = mooreDelta[oCur][sym];
+  mooreStates.push(oNext);
+  mooreOutputs.push(mooreOutput[oNext]);
 
   render();
-  new ResizeObserver(function() { resize(); }).observe(document.documentElement);
-  resize();
-})();
+}
+
+function resetSim() {
+  inputSeq = [];
+  mealyStates = ['S'];
+  mealyOutputs = [];
+  mooreStates = ['S'];
+  mooreOutputs = ['S'];
+  render();
+}
+
+// Hlavni vykreslovaci funkce - zobrazi prechody, souhrn a porovnani obou automatu
+function render() {
+  var states = mode === 'mealy' ? mealyStates : mooreStates;
+  var outputs = mode === 'mealy' ? mealyOutputs : mooreOutputs;
+
+  var html = '';
+  if (inputSeq.length === 0) {
+    var initState = states[0];
+    html += '<div style="color:#888; font-size:13px;">Počáteční stav: <strong>' + initState + '</strong>';
+    if (mode === 'moore') {
+      html += ' → výstup: <strong>' + mooreOutput[initState] + '</strong> (Moorův automat produkuje výstup i v počátečním stavu)';
+    }
+    html += '</div>';
+  } else {
+    html += '<div class="output-display">';
+    // Moore zacina vystupem z pocatecniho stavu (proto je vystup o 1 delsi)
+    if (mode === 'moore') {
+      html += '<div class="step-box"><div class="step-state">start</div><div class="step-output">' + mooreOutputs[0] + '</div></div>';
+    }
+    for (var i = 0; i < inputSeq.length; i++) {
+      if (mode === 'moore' || i > 0) {
+        html += '<div class="step-arrow">→</div>';
+      }
+      html += '<div class="step-box">';
+      html += '<div class="step-state">' + states[i] + '→' + states[i + 1] + '</div>';
+      html += '<div class="step-input">' + inputSeq[i] + '</div>';
+      if (mode === 'mealy') {
+        html += '<div class="step-output">' + mealyOutputs[i] + '</div>';
+      } else {
+        html += '<div class="step-output">' + mooreOutputs[i + 1] + '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  setHTML('stepDisplay', html);
+
+  // Souhrn vstupu a vystupu
+  var sumHtml = '';
+  if (inputSeq.length > 0) {
+    sumHtml += '<div class="summary-item"><strong>Vstup:</strong> ' + inputSeq.join('') + '</div>';
+    if (mode === 'mealy') {
+      sumHtml += '<div class="summary-item"><strong>Výstup (Mealy):</strong> ' + mealyOutputs.join('') +
+        ' <span style="color:#888; font-size:11px;">(délka = ' + mealyOutputs.length + ')</span></div>';
+    } else {
+      sumHtml += '<div class="summary-item"><strong>Výstup (Moore):</strong> ' + mooreOutputs.join('') +
+        ' <span style="color:#888; font-size:11px;">(délka = ' + mooreOutputs.length + ')</span></div>';
+    }
+  }
+  setHTML('summaryRow', sumHtml);
+
+  // Porovnani - vzdy zobrazuje oba automaty vedle sebe
+  var compHtml = '';
+  if (inputSeq.length > 0) {
+    compHtml += '<div class="comp-card mealy"><h4>Mealyho automat</h4>';
+    compHtml += '<div style="font-size:12px;">Výstup při přechodech</div>';
+    compHtml += '<div class="out">' + inputSeq.join('') + ' → ' + mealyOutputs.join('') + '</div>';
+    compHtml += '<div style="font-size:11px; color:#888; margin-top:4px;">Délka výstupu = délka vstupu = ' + inputSeq.length + '</div></div>';
+
+    compHtml += '<div class="comp-card moore"><h4>Moorův automat</h4>';
+    compHtml += '<div style="font-size:12px;">Výstup ze stavů (včetně počátečního)</div>';
+    compHtml += '<div class="out">' + inputSeq.join('') + ' → ' + mooreOutputs.join('') + '</div>';
+    compHtml += '<div style="font-size:11px; color:#888; margin-top:4px;">Délka výstupu = délka vstupu + 1 = ' + mooreOutputs.length + '</div></div>';
+  }
+  setHTML('comparisonArea', compHtml);
+}
+
+render();
 </script>
 </body>
 </html>

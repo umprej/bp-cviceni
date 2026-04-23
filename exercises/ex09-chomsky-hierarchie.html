@@ -22,47 +22,49 @@
 
 <div class="feedback" id="feedback"></div>
 
+<script src="exercises.js"></script>
 <script>
-const items = [
+// Cviceni na serazeni typu gramatik v Chomskeho hierarchii (drag & drop)
+// Uzivatel pretahuje polozky a kontroluje spravne poradi
+
+// Definice typu gramatik s jejich ID pro overeni poradi
+var items = [
   { id: 1, label: 'Typ 3 — Regulární' },
   { id: 2, label: 'Typ 2 — Bezkontextová' },
   { id: 3, label: 'Typ 1 — Kontextová' },
   { id: 0, label: 'Typ 0 — Neomezená' }
 ];
 
-// Initial shuffled order by indices: [3, 1, 0, 2]
-const initialOrder = [3, 1, 0, 2];
-// Correct id order top to bottom
-const correctIds = [1, 2, 3, 0];
+var initialOrder = [3, 1, 0, 2]; // zamichane poradi na zacatku
+var correctIds = [1, 2, 3, 0];   // spravne poradi: Typ 3 -> Typ 2 -> Typ 1 -> Typ 0
+var currentOrder = initialOrder.slice();
 
-let currentOrder = [...initialOrder];
+var dragIdx = null;
+var touchDragIdx = null;
 
+// Vykresleni seznamu polozek s drag & drop handlery
 function render() {
-  const list = document.getElementById('sortList');
+  var list = $('sortList');
   list.innerHTML = '';
-  currentOrder.forEach((idx, pos) => {
-    const item = items[idx];
-    const li = document.createElement('li');
-    li.className = 'sort-item';
+  for (var pos = 0; pos < currentOrder.length; pos++) {
+    var item = items[currentOrder[pos]];
+    var li = el('li', { cls: 'sort-item', html: '<span class="num-badge">' + (pos + 1) + '</span><span class="item-label">' + item.label + '</span>' });
     li.draggable = true;
     li.dataset.pos = pos;
-    li.innerHTML = '<span class="num-badge">' + (pos + 1) + '</span><span class="item-label">' + item.label + '</span>';
     li.addEventListener('dragstart', onDragStart);
     li.addEventListener('dragend', onDragEnd);
     li.addEventListener('dragover', onDragOver);
     li.addEventListener('dragenter', onDragEnter);
     li.addEventListener('dragleave', onDragLeave);
     li.addEventListener('drop', onDrop);
-    // Touch support
     li.addEventListener('touchstart', onTouchStart, { passive: false });
     li.addEventListener('touchmove', onTouchMove, { passive: false });
     li.addEventListener('touchend', onTouchEnd);
     list.appendChild(li);
-  });
+  }
 }
 
-let dragIdx = null;
-
+// Drag & drop eventy pro desktop
 function onDragStart(e) {
   dragIdx = parseInt(e.currentTarget.dataset.pos);
   e.currentTarget.classList.add('dragging');
@@ -75,33 +77,30 @@ function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
 function onDrop(e) {
   e.preventDefault();
   e.currentTarget.classList.remove('drag-over');
-  const dropIdx = parseInt(e.currentTarget.dataset.pos);
+  var dropIdx = parseInt(e.currentTarget.dataset.pos);
   if (dragIdx !== null && dragIdx !== dropIdx) {
-    const moved = currentOrder.splice(dragIdx, 1)[0];
+    // Presunuti polozky z puvodni pozice na novou
+    var moved = currentOrder.splice(dragIdx, 1)[0];
     currentOrder.splice(dropIdx, 0, moved);
     render();
   }
 }
 
-// Touch drag support
-let touchDragIdx = null;
-let touchClone = null;
+// Touch eventy pro mobily
 function onTouchStart(e) {
   touchDragIdx = parseInt(e.currentTarget.dataset.pos);
   e.currentTarget.classList.add('dragging');
 }
-function onTouchMove(e) {
-  e.preventDefault();
-}
+function onTouchMove(e) { e.preventDefault(); }
 function onTouchEnd(e) {
   if (touchDragIdx === null) return;
-  const touch = e.changedTouches[0];
-  const el = document.elementFromPoint(touch.clientX, touch.clientY);
-  const li = el ? el.closest('.sort-item') : null;
+  var touch = e.changedTouches[0];
+  var target = document.elementFromPoint(touch.clientX, touch.clientY);
+  var li = target ? target.closest('.sort-item') : null;
   if (li) {
-    const dropIdx = parseInt(li.dataset.pos);
+    var dropIdx = parseInt(li.dataset.pos);
     if (touchDragIdx !== dropIdx) {
-      const moved = currentOrder.splice(touchDragIdx, 1)[0];
+      var moved = currentOrder.splice(touchDragIdx, 1)[0];
       currentOrder.splice(dropIdx, 0, moved);
     }
   }
@@ -109,10 +108,11 @@ function onTouchEnd(e) {
   render();
 }
 
+// Kontrola poradi v hierarchii
 function checkOrder() {
-  const fb = document.getElementById('feedback');
-  const ids = currentOrder.map(idx => items[idx].id);
-  const correct = ids.every((id, i) => id === correctIds[i]);
+  var fb = $('feedback');
+  var ids = currentOrder.map(function(idx) { return items[idx].id; });
+  var correct = ids.every(function(id, i) { return id === correctIds[i]; });
   if (correct) {
     fb.className = 'feedback correct';
     fb.textContent = '✓ Správně! Pořadí Chomského hierarchie je správné.';
@@ -123,22 +123,13 @@ function checkOrder() {
 }
 
 function resetOrder() {
-  currentOrder = [...initialOrder];
-  document.getElementById('feedback').className = 'feedback';
-  document.getElementById('feedback').style.display = 'none';
+  currentOrder = initialOrder.slice();
+  $('feedback').className = 'feedback';
+  $('feedback').style.display = 'none';
   render();
 }
 
 render();
-
-// Iframe resize messaging
-function sendHeight() {
-  const h = document.documentElement.scrollHeight;
-  window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
-}
-const ro = new ResizeObserver(sendHeight);
-ro.observe(document.body);
-window.addEventListener('load', sendHeight);
 </script>
 </body>
 </html>

@@ -26,231 +26,220 @@
   <div class="feedback" id="feedback"></div>
 </div>
 
+<script src="exercises.js"></script>
 <script>
-(function() {
-  const pairs = [
-    { op: 'M ∩ N', result: '{3, 4}' },
-    { op: 'M ∪ N', result: '{1, 2, 3, 4, 5, 6}' },
-    { op: 'M \\ N', result: '{1, 2}' }
-  ];
+// Cviceni na prirazovani mnozinovych operaci k vysledkum (drag & drop)
+// M = {1,2,3,4}, N = {3,4,5,6}
 
-  // Shuffle helper
-  function shuffle(arr) {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
+// spravne pary operace -> vysledek
+var pairs = [
+  { op: 'M ∩ N', result: '{3, 4}' },
+  { op: 'M ∪ N', result: '{1, 2, 3, 4, 5, 6}' },
+  { op: 'M \\ N', result: '{1, 2}' }
+];
+
+var sourceEl = $('source');
+var zonesEl = $('zones');
+var feedbackEl = $('feedback');
+var draggedOp = null;
+
+// Zamichani pole (Fisher-Yates)
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+// Sestavi cele UI - tahaci operace a cilove zony
+function buildUI() {
+  feedbackEl.className = 'feedback';
+  feedbackEl.style.display = 'none';
+  sourceEl.innerHTML = '';
+  zonesEl.innerHTML = '';
+
+  // zamichat operace i vysledky zvlast, at to neni trivialni
+  var shuffledOps = shuffle(pairs.map(function(p) { return p.op; }));
+  var shuffledResults = shuffle(pairs.slice());
+
+  shuffledOps.forEach(function(op) {
+    var item = el('div', { cls: 'drag-item', text: op, attrs: { draggable: 'true' } });
+    item.dataset.op = op;
+    item.addEventListener('dragstart', onDragStart);
+    sourceEl.appendChild(item);
+  });
+
+  shuffledResults.forEach(function(p) {
+    var zone = el('div', { cls: 'drop-zone', html: '<div class="label">' + p.result + '</div><div class="placeholder">Přetáhněte sem</div>' });
+    zone.dataset.result = p.result;
+    zone.addEventListener('dragover', onDragOver);
+    zone.addEventListener('dragleave', onDragLeave);
+    zone.addEventListener('drop', onDrop);
+    zonesEl.appendChild(zone);
+  });
+}
+
+// --- Drag & drop handlery ---
+
+function onDragStart(e) {
+  draggedOp = e.target.dataset.op;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', draggedOp);
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('over');
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('over');
+}
+
+// Hlavni logika dropu - resi i presun mezi zonami
+function onDrop(e) {
+  e.preventDefault();
+  var zone = e.currentTarget;
+  zone.classList.remove('over');
+  var op = e.dataTransfer.getData('text/plain');
+  if (!op) return;
+
+  // kdyz uz tam neco je, vratit to zpet do source
+  var existing = zone.querySelector('.placed');
+  if (existing) {
+    returnToSource(existing.dataset.op);
+    existing.remove();
   }
 
-  const sourceEl = document.getElementById('source');
-  const zonesEl = document.getElementById('zones');
-  const feedbackEl = document.getElementById('feedback');
-  let draggedOp = null;
+  // odebrat ze zdrojove oblasti
+  var sourceItem = sourceEl.querySelector('[data-op="' + CSS.escape(op) + '"]');
+  if (sourceItem) sourceItem.remove();
 
-  function buildUI() {
-    feedbackEl.className = 'feedback';
-    feedbackEl.style.display = 'none';
-    sourceEl.innerHTML = '';
-    zonesEl.innerHTML = '';
-
-    const shuffledOps = shuffle(pairs.map(p => p.op));
-    const shuffledResults = shuffle(pairs.slice());
-
-    shuffledOps.forEach(op => {
-      const el = document.createElement('div');
-      el.className = 'drag-item';
-      el.draggable = true;
-      el.textContent = op;
-      el.dataset.op = op;
-      el.addEventListener('dragstart', onDragStart);
-      sourceEl.appendChild(el);
-    });
-
-    shuffledResults.forEach(p => {
-      const zone = document.createElement('div');
-      zone.className = 'drop-zone';
-      zone.dataset.result = p.result;
-      zone.innerHTML = '<div class="label">' + p.result + '</div><div class="placeholder">Přetáhněte sem</div>';
-      zone.addEventListener('dragover', onDragOver);
-      zone.addEventListener('dragleave', onDragLeave);
-      zone.addEventListener('drop', onDrop);
-      zonesEl.appendChild(zone);
-    });
-  }
-
-  function onDragStart(e) {
-    draggedOp = e.target.dataset.op;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', draggedOp);
-  }
-
-  function onDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    e.currentTarget.classList.add('over');
-  }
-
-  function onDragLeave(e) {
-    e.currentTarget.classList.remove('over');
-  }
-
-  function onDrop(e) {
-    e.preventDefault();
-    const zone = e.currentTarget;
-    zone.classList.remove('over');
-    const op = e.dataTransfer.getData('text/plain');
-    if (!op) return;
-
-    // If zone already has a placed item, return it to source
-    const existing = zone.querySelector('.placed');
-    if (existing) {
-      returnToSource(existing.dataset.op);
-      existing.remove();
-    }
-
-    // Remove from source
-    const sourceItem = sourceEl.querySelector('[data-op="' + CSS.escape(op) + '"]');
-    if (sourceItem) sourceItem.remove();
-
-    // Also remove from any other zone if it was placed there
-    document.querySelectorAll('.drop-zone .placed').forEach(pl => {
-      if (pl.dataset.op === op) {
-        returnToSource(op);
-        pl.remove();
-        showPlaceholder(pl.closest('.drop-zone'));
-      }
-    });
-    // Re-remove from source (returnToSource re-adds it)
-    const dupSource = sourceEl.querySelector('[data-op="' + CSS.escape(op) + '"]');
-    if (dupSource) dupSource.remove();
-
-    // Place in zone
-    const placeholder = zone.querySelector('.placeholder');
-    if (placeholder) placeholder.style.display = 'none';
-
-    const placed = document.createElement('div');
-    placed.className = 'placed';
-    placed.textContent = op;
-    placed.dataset.op = op;
-    placed.draggable = true;
-    placed.addEventListener('dragstart', function(ev) {
-      draggedOp = op;
-      ev.dataTransfer.effectAllowed = 'move';
-      ev.dataTransfer.setData('text/plain', op);
-      setTimeout(() => {
-        placed.remove();
-        showPlaceholder(zone);
-      }, 0);
-    });
-    zone.appendChild(placed);
-
-    // Remove per-zone feedback if present
-    const zf = zone.querySelector('.zone-feedback');
-    if (zf) zf.remove();
-
-    sendHeight();
-  }
-
-  function returnToSource(op) {
-    const el = document.createElement('div');
-    el.className = 'drag-item';
-    el.draggable = true;
-    el.textContent = op;
-    el.dataset.op = op;
-    el.addEventListener('dragstart', onDragStart);
-    sourceEl.appendChild(el);
-  }
-
-  function showPlaceholder(zone) {
-    if (!zone) return;
-    const placed = zone.querySelector('.placed');
-    if (!placed) {
-      const ph = zone.querySelector('.placeholder');
-      if (ph) ph.style.display = '';
-    }
-  }
-
-  // Allow dropping back to source area
-  sourceEl.addEventListener('dragover', function(e) { e.preventDefault(); });
-  sourceEl.addEventListener('drop', function(e) {
-    e.preventDefault();
-    const op = e.dataTransfer.getData('text/plain');
-    if (!op) return;
-    // Remove from any zone
-    document.querySelectorAll('.drop-zone .placed').forEach(pl => {
-      if (pl.dataset.op === op) {
-        const z = pl.closest('.drop-zone');
-        pl.remove();
-        showPlaceholder(z);
-      }
-    });
-    // Add back if not already there
-    if (!sourceEl.querySelector('[data-op="' + CSS.escape(op) + '"]')) {
+  // operace muze byt jeste v jine zone - presunout ji sem
+  document.querySelectorAll('.drop-zone .placed').forEach(function(pl) {
+    if (pl.dataset.op === op) {
       returnToSource(op);
+      pl.remove();
+      showPlaceholder(pl.closest('.drop-zone'));
     }
-    sendHeight();
   });
+  var dupSource = sourceEl.querySelector('[data-op="' + CSS.escape(op) + '"]');
+  if (dupSource) dupSource.remove();
 
-  document.getElementById('checkBtn').addEventListener('click', function() {
-    const correctMap = {};
-    pairs.forEach(p => { correctMap[p.result] = p.op; });
+  var placeholder = zone.querySelector('.placeholder');
+  if (placeholder) placeholder.style.display = 'none';
 
-    let allCorrect = true;
-    let allFilled = true;
-
-    document.querySelectorAll('.drop-zone').forEach(zone => {
-      const old = zone.querySelector('.zone-feedback');
-      if (old) old.remove();
-
-      const placed = zone.querySelector('.placed');
-      const result = zone.dataset.result;
-      const expected = correctMap[result];
-
-      const fb = document.createElement('div');
-      fb.className = 'zone-feedback';
-
-      if (!placed) {
-        allFilled = false;
-        allCorrect = false;
-        fb.className += ' bad';
-        fb.textContent = 'Sem patří operace.';
-      } else if (placed.dataset.op === expected) {
-        fb.className += ' ok';
-        fb.textContent = 'Správně!';
-      } else {
-        allCorrect = false;
-        fb.className += ' bad';
-        fb.textContent = 'Nesprávně.';
-      }
-      zone.appendChild(fb);
-    });
-
-    feedbackEl.className = 'feedback ' + (allCorrect ? 'correct' : 'incorrect');
-    feedbackEl.style.display = 'block';
-    feedbackEl.textContent = allCorrect
-      ? 'Výborně! Všechny operace jsou přiřazeny správně.'
-      : (allFilled ? 'Některé přiřazení nejsou správné. Zkuste to znovu.' : 'Přiřaďte všechny operace.');
-    sendHeight();
+  // vytvorit umisteny element v zone
+  var placed = el('div', { cls: 'placed', text: op, attrs: { draggable: 'true' } });
+  placed.dataset.op = op;
+  // umoznit pretahnout zpet ze zony
+  placed.addEventListener('dragstart', function(ev) {
+    draggedOp = op;
+    ev.dataTransfer.effectAllowed = 'move';
+    ev.dataTransfer.setData('text/plain', op);
+    setTimeout(function() {
+      placed.remove();
+      showPlaceholder(zone);
+    }, 0);
   });
+  zone.appendChild(placed);
 
-  document.getElementById('resetBtn').addEventListener('click', function() {
-    buildUI();
-    sendHeight();
-  });
+  // smazat stary feedback pokud je
+  var zf = zone.querySelector('.zone-feedback');
+  if (zf) zf.remove();
 
-  function sendHeight() {
-    requestAnimationFrame(function() {
-      const h = document.documentElement.scrollHeight;
-      window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
-    });
+  notifyResize();
+}
+
+// Vrati operaci zpet do zdrojove oblasti
+function returnToSource(op) {
+  var item = el('div', { cls: 'drag-item', text: op, attrs: { draggable: 'true' } });
+  item.dataset.op = op;
+  item.addEventListener('dragstart', onDragStart);
+  sourceEl.appendChild(item);
+}
+
+// Ukaze placeholder text kdyz je zona prazdna
+function showPlaceholder(zone) {
+  if (!zone) return;
+  var placed = zone.querySelector('.placed');
+  if (!placed) {
+    var ph = zone.querySelector('.placeholder');
+    if (ph) ph.style.display = '';
   }
+}
 
+// Drop zpet do zdrojove oblasti
+sourceEl.addEventListener('dragover', function(e) { e.preventDefault(); });
+sourceEl.addEventListener('drop', function(e) {
+  e.preventDefault();
+  var op = e.dataTransfer.getData('text/plain');
+  if (!op) return;
+  // odebrat z cilove zony
+  document.querySelectorAll('.drop-zone .placed').forEach(function(pl) {
+    if (pl.dataset.op === op) {
+      var z = pl.closest('.drop-zone');
+      pl.remove();
+      showPlaceholder(z);
+    }
+  });
+  if (!sourceEl.querySelector('[data-op="' + CSS.escape(op) + '"]')) {
+    returnToSource(op);
+  }
+  notifyResize();
+});
+
+// Kontrola spravnosti prirazeni
+$('checkBtn').addEventListener('click', function() {
+  var correctMap = {};
+  pairs.forEach(function(p) { correctMap[p.result] = p.op; });
+
+  var allCorrect = true;
+  var allFilled = true;
+
+  document.querySelectorAll('.drop-zone').forEach(function(zone) {
+    var old = zone.querySelector('.zone-feedback');
+    if (old) old.remove();
+
+    var placed = zone.querySelector('.placed');
+    var result = zone.dataset.result;
+    var expected = correctMap[result];
+
+    var fb = el('div', { cls: 'zone-feedback' });
+
+    if (!placed) {
+      allFilled = false;
+      allCorrect = false;
+      fb.className += ' bad';
+      fb.textContent = 'Sem patří operace.';
+    } else if (placed.dataset.op === expected) {
+      fb.className += ' ok';
+      fb.textContent = 'Správně!';
+    } else {
+      allCorrect = false;
+      fb.className += ' bad';
+      fb.textContent = 'Nesprávně.';
+    }
+    zone.appendChild(fb);
+  });
+
+  feedbackEl.className = 'feedback ' + (allCorrect ? 'correct' : 'incorrect');
+  feedbackEl.style.display = 'block';
+  feedbackEl.textContent = allCorrect
+    ? 'Výborně! Všechny operace jsou přiřazeny správně.'
+    : (allFilled ? 'Některé přiřazení nejsou správné. Zkuste to znovu.' : 'Přiřaďte všechny operace.');
+  notifyResize();
+});
+
+$('resetBtn').addEventListener('click', function() {
   buildUI();
-  window.addEventListener('load', sendHeight);
-  window.addEventListener('resize', sendHeight);
-})();
+  notifyResize();
+});
+
+buildUI();
 </script>
 </body>
 </html>

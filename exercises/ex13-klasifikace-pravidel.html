@@ -58,188 +58,182 @@ input[type=text] { width: 260px; }
   Potom ji zkuste rozšířit na typ 2 — co musíte změnit?
 </div>
 
+<script src="exercises.js"></script>
 <script>
-(function() {
-  var rules = []; // { left: string, right: string, type: number, reason: string }
+// Piskoviste pro klasifikaci gramatickych pravidel do Chomskeho hierarchie
+// Uzivatel zadava pravidla a system je automaticky zaradi do spravneho typu
 
-  function resize() {
-    parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
+var rules = []; // pole pravidel: { left, right, type (0-3), reason }
+
+// Parsovani pravidla gramatiky - normalizace sipky a epsilonu
+function parseRule(text) {
+  text = text.trim();
+  text = text.replace(/→/g, '->').replace(/−>/g, '->').replace(/=>/g, '->');
+  text = text.replace(/ε/g, 'eps').replace(/\\epsilon/g, 'eps').replace(/\\e/g, 'eps');
+  var parts = text.split('->');
+  if (parts.length !== 2) return null;
+  var left = parts[0].trim();
+  var right = parts[1].trim();
+  if (!left) return null;
+  return { left: left, right: right || 'eps' };
+}
+
+function isNonterminal(ch) { return ch >= 'A' && ch <= 'Z'; }
+function isTerminal(ch) { return (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9'); }
+
+// Klasifikace pravidla do Chomskeho hierarchie (typ 0-3)
+// Logika: nejdriv zkusime regularni (typ 3), pak bezkontextove (typ 2), atd.
+function classifyRule(left, right) {
+  var leftSyms = left.split('');
+  var rightStr = right === 'eps' ? '' : right;
+  var rightSyms = rightStr.split('');
+
+  var leftNonterms = leftSyms.filter(isNonterminal);
+  var leftTerms = leftSyms.filter(isTerminal);
+
+  // Leva strana musi mit alespon jeden neterminal
+  if (leftNonterms.length === 0) {
+    return { type: -1, reason: 'Levá strana musí obsahovat alespoň jeden neterminál.' };
   }
 
-  function parseRule(text) {
-    text = text.trim();
-    // normalize arrow
-    text = text.replace(/→/g, '->').replace(/−>/g, '->').replace(/=>/g, '->');
-    // normalize epsilon
-    text = text.replace(/ε/g, 'eps').replace(/\\epsilon/g, 'eps').replace(/\\e/g, 'eps');
-    var parts = text.split('->');
-    if (parts.length !== 2) return null;
-    var left = parts[0].trim();
-    var right = parts[1].trim();
-    if (!left) return null;
-    return { left: left, right: right || 'eps' };
+  // Specialni pripad: S -> epsilon (povoleno i v regularni gramatice)
+  if (left.length === 1 && isNonterminal(left[0]) && rightStr === '') {
+    return { type: 3, reason: 'Speciální pravidlo: neterminál → ε (povoleno v regulární gramatice pro startovní symbol).' };
   }
 
-  function isNonterminal(ch) { return ch >= 'A' && ch <= 'Z'; }
-  function isTerminal(ch) { return (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9'); }
-
-  function classifyRule(left, right) {
-    // Parse symbols
-    var leftSyms = left.split('');
-    var rightStr = right === 'eps' ? '' : right;
-    var rightSyms = rightStr.split('');
-
-    var leftNonterms = leftSyms.filter(isNonterminal);
-    var leftTerms = leftSyms.filter(isTerminal);
-
-    // Must have at least one nonterminal on left
-    if (leftNonterms.length === 0) {
-      return { type: -1, reason: 'Levá strana musí obsahovat alespoň jeden neterminál.' };
+  // Typ 3 (regularni): A -> aB, A -> a, A -> eps
+  // Podminka: na leve strane jen jeden neterminal
+  if (left.length === 1 && isNonterminal(left[0])) {
+    // Pravolinearni: A -> wB nebo A -> w (w = retezec terminalu)
+    if (rightSyms.length === 0) {
+      return { type: 3, reason: 'A → ε: regulární pravidlo.' };
     }
-
-    // Check for S → ε special case
-    if (left.length === 1 && isNonterminal(left[0]) && rightStr === '') {
-      return { type: 3, reason: 'Speciální pravidlo: neterminál → ε (povoleno v regulární gramatice pro startovní symbol).' };
+    // Check A → a (single terminal)
+    if (rightSyms.length === 1 && isTerminal(rightSyms[0])) {
+      return { type: 3, reason: 'A → a: regulární pravidlo (terminál).' };
     }
-
-    // Type 3 (regular): A → aB, A → a, A → ε
-    if (left.length === 1 && isNonterminal(left[0])) {
-      // Right-linear: A → wB or A → w (w = string of terminals)
-      if (rightSyms.length === 0) {
-        return { type: 3, reason: 'A → ε: regulární pravidlo.' };
-      }
-      // Check A → a (single terminal)
-      if (rightSyms.length === 1 && isTerminal(rightSyms[0])) {
-        return { type: 3, reason: 'A → a: regulární pravidlo (terminál).' };
-      }
-      // Check A → aB or A → a...aB (right-linear)
-      var lastIsNT = isNonterminal(rightSyms[rightSyms.length - 1]);
-      var allTermsBefore = rightSyms.slice(0, -1).every(isTerminal);
-      if (lastIsNT && allTermsBefore && rightSyms.length >= 2) {
-        return { type: 3, reason: 'A → w·B: pravolineární regulární pravidlo (terminály + neterminál na konci).' };
-      }
-      // Check A → w (all terminals)
-      if (rightSyms.every(isTerminal)) {
-        return { type: 3, reason: 'A → w: regulární pravidlo (samé terminály).' };
-      }
-      // Check left-linear: A → Ba or A → Bw
-      var firstIsNT = isNonterminal(rightSyms[0]);
-      var allTermsAfter = rightSyms.slice(1).every(isTerminal);
-      if (firstIsNT && allTermsAfter && rightSyms.length >= 2) {
-        return { type: 3, reason: 'A → B·w: levolineární regulární pravidlo.' };
-      }
-      // Context-free if single nonterminal on left
-      // Check if right has nonterminals mixed with terminals
-      var rightNTs = rightSyms.filter(isNonterminal);
-      if (rightNTs.length <= 1) {
-        // A → aNb style: nonterminal embedded in terminals
-        return { type: 2, reason: 'A → α: bezkontextové pravidlo (jeden neterminál na levé straně, ale pravá strana není lineární).' };
-      }
-      return { type: 2, reason: 'A → α: bezkontextové pravidlo (jeden neterminál na levé straně).' };
+    // A -> aB nebo A -> aaB (pravolinearni - neterminal jen na konci)
+    var lastIsNT = isNonterminal(rightSyms[rightSyms.length - 1]);
+    var allTermsBefore = rightSyms.slice(0, -1).every(isTerminal);
+    if (lastIsNT && allTermsBefore && rightSyms.length >= 2) {
+      return { type: 3, reason: 'A → w·B: pravolineární regulární pravidlo (terminály + neterminál na konci).' };
     }
-
-    // Type 1 (context-sensitive): |left| <= |right|, and left = αAβ → αγβ pattern
-    if (left.length <= rightStr.length) {
-      // Check for context pattern
-      if (leftNonterms.length === 1 && leftTerms.length >= 1) {
-        return { type: 1, reason: 'αAβ → αγβ: kontextové pravidlo (|levá| ≤ |pravá|, neterminál v kontextu terminálů).' };
-      }
-      if (leftNonterms.length >= 2) {
-        return { type: 1, reason: '|levá| ≤ |pravá| a levá strana má více symbolů — kontextové pravidlo (typ 1).' };
-      }
-      return { type: 1, reason: '|levá| ≤ |pravá|: kontextové pravidlo.' };
+    // Check A → w (all terminals)
+    if (rightSyms.every(isTerminal)) {
+      return { type: 3, reason: 'A → w: regulární pravidlo (samé terminály).' };
     }
-
-    // Type 0 (unrestricted): |left| > |right| (shortening rule)
-    return { type: 0, reason: '|levá| > |pravá|: zkracující pravidlo — neomezená gramatika (typ 0).' };
-  }
-
-  function addRule() {
-    var input = document.getElementById('ruleInput');
-    var parsed = parseRule(input.value);
-    if (!parsed) {
-      input.style.borderColor = '#dc3545';
-      setTimeout(function() { input.style.borderColor = '#ccc'; }, 800);
-      return;
+    // A -> Ba nebo A -> Bw (levolinearni - neterminal jen na zacatku)
+    var firstIsNT = isNonterminal(rightSyms[0]);
+    var allTermsAfter = rightSyms.slice(1).every(isTerminal);
+    if (firstIsNT && allTermsAfter && rightSyms.length >= 2) {
+      return { type: 3, reason: 'A → B·w: levolineární regulární pravidlo.' };
     }
-    var cls = classifyRule(parsed.left, parsed.right);
-    rules.push({ left: parsed.left, right: parsed.right, type: cls.type, reason: cls.reason });
-    input.value = '';
-    input.focus();
-    render();
-    resize();
-  }
-  window.addRule = addRule;
-
-  function addPreset(text) {
-    document.getElementById('ruleInput').value = text;
-    addRule();
-  }
-  window.addPreset = addPreset;
-
-  function removeRule(idx) {
-    rules.splice(idx, 1);
-    render();
-    resize();
-  }
-  window.removeRule = removeRule;
-
-  function clearAll() {
-    rules = [];
-    render();
-    resize();
-  }
-  window.clearAll = clearAll;
-
-  function render() {
-    var listEl = document.getElementById('ruleList');
-    if (rules.length === 0) {
-      listEl.innerHTML = '<div style="color:#999; font-size:13px;">Zatím žádná pravidla — přidejte je výše.</div>';
-    } else {
-      var html = '';
-      rules.forEach(function(r, i) {
-        var displayRight = r.right === 'eps' ? 'ε' : r.right;
-        var typeLabel = r.type === 3 ? 'Typ 3 — regulární' :
-                        r.type === 2 ? 'Typ 2 — bezkontextová' :
-                        r.type === 1 ? 'Typ 1 — kontextová' :
-                        r.type === 0 ? 'Typ 0 — neomezená' : 'Neplatné';
-        var typeCls = r.type === 3 ? 'type3' : r.type === 2 ? 'type2' :
-                      r.type === 1 ? 'type1' : r.type === 0 ? 'type0' : 'invalid';
-        html += '<div class="rule-card">' +
-          '<div class="rule-text">' + r.left + ' → ' + displayRight + '</div>' +
-          '<div class="classification">' +
-          '<span class="type-badge ' + typeCls + '">' + typeLabel + '</span>' +
-          '<div class="reason">' + r.reason + '</div>' +
-          '</div>' +
-          '<button class="rule-delete" onclick="removeRule(' + i + ')" title="Smazat">×</button>' +
-          '</div>';
-      });
-      listEl.innerHTML = html;
+    // Neni linearni -> bezkontextove (jeden neterminal vlevo, ale prava strana neni ok pro typ 3)
+    var rightNTs = rightSyms.filter(isNonterminal);
+    if (rightNTs.length <= 1) {
+      // A → aNb style: nonterminal embedded in terminals
+      return { type: 2, reason: 'A → α: bezkontextové pravidlo (jeden neterminál na levé straně, ale pravá strana není lineární).' };
     }
-
-    // Update counts
-    var counts = { 3: 0, 2: 0, 1: 0, 0: 0 };
-    rules.forEach(function(r) { if (counts.hasOwnProperty(r.type)) counts[r.type]++; });
-    document.getElementById('count3').textContent = counts[3];
-    document.getElementById('count2').textContent = counts[2];
-    document.getElementById('count1').textContent = counts[1];
-    document.getElementById('count0').textContent = counts[0];
-
-    // Highlight active segments
-    ['t3', 't2', 't1', 't0'].forEach(function(cls, i) {
-      var type = 3 - i;
-      var segs = document.querySelectorAll('.hier-seg.' + cls);
-      segs.forEach(function(seg) {
-        if (counts[type] > 0) seg.classList.add('active');
-        else seg.classList.remove('active');
-      });
-    });
+    return { type: 2, reason: 'A → α: bezkontextové pravidlo (jeden neterminál na levé straně).' };
   }
 
+  // Typ 1 (kontextova): |leva| <= |prava|, tvar aAb -> aXb
+  if (left.length <= rightStr.length) {
+    // Jeden neterminal v kontextu terminalu
+    if (leftNonterms.length === 1 && leftTerms.length >= 1) {
+      return { type: 1, reason: 'αAβ → αγβ: kontextové pravidlo (|levá| ≤ |pravá|, neterminál v kontextu terminálů).' };
+    }
+    if (leftNonterms.length >= 2) {
+      return { type: 1, reason: '|levá| ≤ |pravá| a levá strana má více symbolů — kontextové pravidlo (typ 1).' };
+    }
+    return { type: 1, reason: '|levá| ≤ |pravá|: kontextové pravidlo.' };
+  }
+
+  // Typ 0 (neomezena): |leva| > |prava| = zkracujici pravidlo
+  return { type: 0, reason: '|levá| > |pravá|: zkracující pravidlo — neomezená gramatika (typ 0).' };
+}
+
+// Pridani pravidla - parsovani, klasifikace a vykresleni
+function addRule() {
+  var input = $('ruleInput');
+  var parsed = parseRule(input.value);
+  if (!parsed) {
+    input.style.borderColor = '#dc3545';
+    setTimeout(function() { input.style.borderColor = '#ccc'; }, 800);
+    return;
+  }
+  var cls = classifyRule(parsed.left, parsed.right);
+  rules.push({ left: parsed.left, right: parsed.right, type: cls.type, reason: cls.reason });
+  input.value = '';
+  input.focus();
   render();
-  new ResizeObserver(function() { resize(); }).observe(document.documentElement);
-  resize();
-})();
+  notifyResize();
+}
+
+function addPreset(text) {
+  $('ruleInput').value = text;
+  addRule();
+}
+
+function removeRule(idx) {
+  rules.splice(idx, 1);
+  render();
+  notifyResize();
+}
+
+function clearAll() {
+  rules = [];
+  render();
+  notifyResize();
+}
+
+// Vykresleni seznamu pravidel a aktualizace pocitadel v hierarchii
+function render() {
+  var listEl = $('ruleList');
+  if (rules.length === 0) {
+    listEl.innerHTML = '<div style="color:#999; font-size:13px;">Zatím žádná pravidla — přidejte je výše.</div>';
+  } else {
+    var html = '';
+    rules.forEach(function(r, i) {
+      var displayRight = r.right === 'eps' ? 'ε' : r.right;
+      var typeLabel = r.type === 3 ? 'Typ 3 — regulární' :
+                      r.type === 2 ? 'Typ 2 — bezkontextová' :
+                      r.type === 1 ? 'Typ 1 — kontextová' :
+                      r.type === 0 ? 'Typ 0 — neomezená' : 'Neplatné';
+      var typeCls = r.type === 3 ? 'type3' : r.type === 2 ? 'type2' :
+                    r.type === 1 ? 'type1' : r.type === 0 ? 'type0' : 'invalid';
+      html += '<div class="rule-card">' +
+        '<div class="rule-text">' + r.left + ' → ' + displayRight + '</div>' +
+        '<div class="classification">' +
+        '<span class="type-badge ' + typeCls + '">' + typeLabel + '</span>' +
+        '<div class="reason">' + r.reason + '</div>' +
+        '</div>' +
+        '<button class="rule-delete" onclick="removeRule(' + i + ')" title="Smazat">×</button>' +
+        '</div>';
+    });
+    listEl.innerHTML = html;
+  }
+
+  // Spocitani pravidel podle typu pro zobrazeni v hierarchii
+  var counts = { 3: 0, 2: 0, 1: 0, 0: 0 };
+  rules.forEach(function(r) { if (counts.hasOwnProperty(r.type)) counts[r.type]++; });
+  setText('count3', counts[3]);
+  setText('count2', counts[2]);
+  setText('count1', counts[1]);
+  setText('count0', counts[0]);
+
+  // Zvyrazneni segmentu hierarchie, ktere maji alespon jedno pravidlo
+  ['t3', 't2', 't1', 't0'].forEach(function(cls, i) {
+    var type = 3 - i;
+    var segs = document.querySelectorAll('.hier-seg.' + cls);
+    segs.forEach(function(seg) {
+      if (counts[type] > 0) seg.classList.add('active');
+      else seg.classList.remove('active');
+    });
+  });
+}
+
+render();
 </script>
 </body>
 </html>

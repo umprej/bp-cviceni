@@ -88,145 +88,145 @@
   V NKA se výpočet větví — automat „hádá" správnou cestu. Slovo je přijato, pokud <em>alespoň jedna</em> větev skončí v koncovém stavu.
 </div>
 
+<script src="exercises.js"></script>
 <script>
-(function() {
-  var delta = {
-    'q0': { 'a': ['q0', 'q1'], 'b': ['q0'] },
-    'q1': { 'a': [], 'b': ['q2'] },
-    'q2': { 'a': [], 'b': [] }
-  };
-  var accepting = { 'q2': true };
-  var labels = { 'q0': 'q\u2080', 'q1': 'q\u2081', 'q2': 'q\u2082' };
+// Simulace NKA prijimajiciho slova koncici na "ab"
+// Vizualizuje vetveni vypoctu a ukazuje rozdil oproti DKA
 
-  var word = '', step = 0;
-  var activeSets = []; // activeSets[i] = array of states after reading i symbols
-  var running = false;
+// Prechodova funkce NKA - pro kazdy stav a symbol vraci mnozinu nasledujicich stavu
+var delta = {
+  'q0': { 'a': ['q0', 'q1'], 'b': ['q0'] },
+  'q1': { 'a': [], 'b': ['q2'] },
+  'q2': { 'a': [], 'b': [] }
+};
+var accepting = { 'q2': true };
+var labels = { 'q0': 'q\u2080', 'q1': 'q\u2081', 'q2': 'q\u2082' };
 
-  function resize() {
-    parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
-  }
+var word = '', step = 0;
+var activeSets = []; // pole mnozin aktivnich stavu pro kazdy krok
+var running = false;
 
-  function tryWord(w) {
-    document.getElementById('wordInput').value = w;
-    startSim();
-  }
-  window.tryWord = tryWord;
+// Vlozi slovo do inputu a rovnou spusti simulaci
+function tryWord(w) {
+  $('wordInput').value = w;
+  startSim();
+}
 
-  function startSim() {
-    word = document.getElementById('wordInput').value.replace(/[^ab]/g, '');
-    if (!word) { document.getElementById('wordInput').focus(); return; }
-    document.getElementById('wordInput').value = word;
-    step = 0;
-    activeSets = [['q0']];
-    running = true;
-    document.getElementById('stepBtn').disabled = false;
-    document.getElementById('runAllBtn').disabled = false;
-    document.getElementById('startBtn').disabled = true;
-    renderTape();
-    renderTree();
-    document.getElementById('verdict').innerHTML = '';
-    resize();
-  }
-  window.startSim = startSim;
+// Inicializace simulace - ocisti vstup a nastavi pocatecni stav
+function startSim() {
+  word = $('wordInput').value.replace(/[^ab]/g, '');
+  if (!word) { $('wordInput').focus(); return; }
+  $('wordInput').value = word;
+  step = 0;
+  activeSets = [['q0']];
+  running = true;
+  $('stepBtn').disabled = false;
+  $('runAllBtn').disabled = false;
+  $('startBtn').disabled = true;
+  renderTape();
+  renderTree();
+  $('verdict').innerHTML = '';
+  notifyResize();
+}
 
-  function stepSim() {
-    if (!running || step >= word.length) return;
-    var sym = word[step];
-    var curSet = activeSets[step];
-    var nextSet = [];
-    var seen = {};
-    curSet.forEach(function(s) {
-      var nexts = delta[s] && delta[s][sym] ? delta[s][sym] : [];
-      nexts.forEach(function(ns) {
-        if (!seen[ns]) { seen[ns] = true; nextSet.push(ns); }
-      });
+// Simulace jednoho kroku NKA - pro kazdy aktivni stav spocita mnozinu nasledniku
+function stepSim() {
+  if (!running || step >= word.length) return;
+  var sym = word[step];
+  var curSet = activeSets[step];
+  var nextSet = [];
+  var seen = {}; // aby se stavy neopakovaly v mnozine
+  curSet.forEach(function(s) {
+    var nexts = delta[s] && delta[s][sym] ? delta[s][sym] : [];
+    nexts.forEach(function(ns) {
+      if (!seen[ns]) { seen[ns] = true; nextSet.push(ns); }
     });
-    step++;
-    activeSets.push(nextSet);
-    renderTape();
-    renderTree();
+  });
+  step++;
+  activeSets.push(nextSet);
+  renderTape();
+  renderTree();
 
-    if (step >= word.length) {
-      finish();
-    }
-    resize();
+  if (step >= word.length) {
+    finish();
   }
-  window.stepSim = stepSim;
+  notifyResize();
+}
 
-  function runAll() {
-    while (running && step < word.length) {
-      stepSim();
-    }
+// Spusti vsechny kroky najednou
+function runAll() {
+  while (running && step < word.length) {
+    stepSim();
   }
-  window.runAll = runAll;
+}
 
-  function finish() {
-    running = false;
-    document.getElementById('stepBtn').disabled = true;
-    document.getElementById('runAllBtn').disabled = true;
-    var finalSet = activeSets[activeSets.length - 1];
-    var accepted = finalSet.some(function(s) { return accepting[s]; });
-    var vEl = document.getElementById('verdict');
-    if (accepted) {
-      vEl.innerHTML = '<div class="verdict accept">\u2713 Slovo \u201e' + word +
-        '\u201c je PŘIJATO \u2014 existuje výpočetní větev končící v koncovém stavu q\u2082.</div>';
+// Vyhodnoceni - slovo je prijato pokud aspon jedna vetev konci v koncovem stavu
+function finish() {
+  running = false;
+  $('stepBtn').disabled = true;
+  $('runAllBtn').disabled = true;
+  var finalSet = activeSets[activeSets.length - 1];
+  var accepted = finalSet.some(function(s) { return accepting[s]; });
+  var vEl = $('verdict');
+  if (accepted) {
+    vEl.innerHTML = '<div class="verdict accept">\u2713 Slovo \u201e' + word +
+      '\u201c je PŘIJATO \u2014 existuje výpočetní větev končící v koncovém stavu q\u2082.</div>';
+  } else {
+    vEl.innerHTML = '<div class="verdict reject">\u2717 Slovo \u201e' + word +
+      '\u201c je ODMÍTNUTO \u2014 žádná větev nekončí v koncovém stavu.</div>';
+  }
+}
+
+// Reset simulace do puvodniho stavu
+function resetSim() {
+  word = ''; step = 0; activeSets = []; running = false;
+  $('stepBtn').disabled = true;
+  $('runAllBtn').disabled = true;
+  $('startBtn').disabled = false;
+  $('wordInput').value = '';
+  $('tape').innerHTML = '';
+  $('tree').innerHTML = '';
+  $('verdict').innerHTML = '';
+  notifyResize();
+}
+
+// Vykresleni pasky - zvyrazni prectene a aktualni symbol
+function renderTape() {
+  var html = '';
+  for (var i = 0; i < word.length; i++) {
+    var cls = 'tape-cell';
+    if (i < step) cls += ' done';
+    if (i === step && running) cls += ' active';
+    html += '<div class="' + cls + '">' + word[i] + '</div>';
+  }
+  $('tape').innerHTML = html;
+}
+
+// Vykresleni stromu vypoctu - kazda uroven = jeden krok, vetvi se podle NKA
+function renderTree() {
+  var html = '';
+  var isFinal = (step >= word.length);
+  for (var i = 0; i <= step; i++) {
+    var lbl = i === 0 ? 'Počátek' : 'Krok ' + i + ' (\u010dte: ' + word[i - 1] + ')';
+    html += '<div class="tree-level"><div class="tree-label">' + lbl + '</div>';
+    var states = activeSets[i];
+    if (states.length === 0) {
+      html += '<div class="branch dead">\u2205 v\u0161echny v\u011btve uv\u00edzly</div>';
     } else {
-      vEl.innerHTML = '<div class="verdict reject">\u2717 Slovo \u201e' + word +
-        '\u201c je ODMÍTNUTO \u2014 žádná větev nekončí v koncovém stavu.</div>';
+      var isLast = (i === step);
+      // Obarveni vetvi - zelena pro prijimajici, cervena pro mrtve, modra pro aktivni
+      states.forEach(function(s) {
+        var cls = 'branch';
+        if (isLast && isFinal && accepting[s]) cls += ' accept';
+        else if (isLast && isFinal && !accepting[s]) cls += ' dead';
+        else cls += ' alive';
+        html += '<div class="' + cls + '">' + labels[s] + '</div>';
+      });
     }
+    html += '</div>';
   }
-
-  function resetSim() {
-    word = ''; step = 0; activeSets = []; running = false;
-    document.getElementById('stepBtn').disabled = true;
-    document.getElementById('runAllBtn').disabled = true;
-    document.getElementById('startBtn').disabled = false;
-    document.getElementById('wordInput').value = '';
-    document.getElementById('tape').innerHTML = '';
-    document.getElementById('tree').innerHTML = '';
-    document.getElementById('verdict').innerHTML = '';
-    resize();
-  }
-  window.resetSim = resetSim;
-
-  function renderTape() {
-    var html = '';
-    for (var i = 0; i < word.length; i++) {
-      var cls = 'tape-cell';
-      if (i < step) cls += ' done';
-      if (i === step && running) cls += ' active';
-      html += '<div class="' + cls + '">' + word[i] + '</div>';
-    }
-    document.getElementById('tape').innerHTML = html;
-  }
-
-  function renderTree() {
-    var html = '';
-    var isFinal = (step >= word.length);
-    for (var i = 0; i <= step; i++) {
-      var lbl = i === 0 ? 'Počátek' : 'Krok ' + i + ' (\u010dte: ' + word[i - 1] + ')';
-      html += '<div class="tree-level"><div class="tree-label">' + lbl + '</div>';
-      var states = activeSets[i];
-      if (states.length === 0) {
-        html += '<div class="branch dead">\u2205 v\u0161echny v\u011btve uv\u00edzly</div>';
-      } else {
-        var isLast = (i === step);
-        states.forEach(function(s) {
-          var cls = 'branch';
-          if (isLast && isFinal && accepting[s]) cls += ' accept';
-          else if (isLast && isFinal && !accepting[s]) cls += ' dead';
-          else cls += ' alive';
-          html += '<div class="' + cls + '">' + labels[s] + '</div>';
-        });
-      }
-      html += '</div>';
-    }
-    document.getElementById('tree').innerHTML = html;
-  }
-
-  new ResizeObserver(function() { resize(); }).observe(document.documentElement);
-  resize();
-})();
+  $('tree').innerHTML = html;
+}
 </script>
 </body>
 </html>

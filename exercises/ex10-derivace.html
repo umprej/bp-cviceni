@@ -32,8 +32,13 @@
   <div class="feedback" id="quizFeedback"></div>
 </div>
 
+<script src="exercises.js"></script>
 <script>
-const steps = [
+// Krokova derivace v regularni gramatice G = ({S, A}, {a, b}, P, S)
+// Ukazuje postupne pouziti pravidel a na konci kviz na rozpoznani jazyka
+
+// Jednotlive kroky derivace retezce "ababa"
+var steps = [
   { formula: 'S', rule: 'Počáteční symbol' },
   { formula: 'aA', rule: 'Použité pravidlo: S → aA' },
   { formula: 'abS', rule: 'Použité pravidlo: A → bS' },
@@ -43,25 +48,27 @@ const steps = [
   { formula: 'ababa', rule: 'Použité pravidlo: A → ε' }
 ];
 
-let current = 0;
+var current = 0;
 
+// Zobrazeni aktualniho kroku derivace
 function renderStep() {
-  document.getElementById('stepFormula').textContent = steps[current].formula;
-  document.getElementById('stepRule').textContent = steps[current].rule;
-  document.getElementById('stepCounter').textContent = (current + 1) + ' / ' + steps.length;
-  document.getElementById('btnPrev').disabled = current === 0;
-  document.getElementById('btnNext').disabled = current === steps.length - 1;
+  setText('stepFormula', steps[current].formula);
+  setText('stepRule', steps[current].rule);
+  setText('stepCounter', (current + 1) + ' / ' + steps.length);
+  $('btnPrev').disabled = current === 0;
+  $('btnNext').disabled = current === steps.length - 1;
 }
 
 function prevStep() { if (current > 0) { current--; renderStep(); } }
 function nextStep() { if (current < steps.length - 1) { current++; renderStep(); } }
 function resetStepper() { current = 0; renderStep(); }
 
+// Overeni odpovedi na otazku jaky jazyk gramatika generuje
 function checkQuiz() {
-  const val = document.getElementById('quizInput').value.trim();
-  const fb = document.getElementById('quizFeedback');
-  // Accept if answer contains (ab) or ab* or (ab)^ or (ab)n
-  const correct = /\(ab\)/.test(val) || /ab\*/.test(val) || /\(ab\)\^/.test(val) || /\(ab\)n/.test(val);
+  var val = $('quizInput').value.trim();
+  var fb = $('quizFeedback');
+  // Akceptujeme ruzne zpusoby zapisu jazyka (ab)^n
+  var correct = /\(ab\)/.test(val) || /ab\*/.test(val) || /\(ab\)\^/.test(val) || /\(ab\)n/.test(val);
   if (correct) {
     fb.className = 'feedback correct';
     fb.textContent = '✓ Správně! Jazyk L = {(ab)^n | n ≥ 0} se skládá z libovolného počtu opakování řetězce "ab".';
@@ -72,15 +79,6 @@ function checkQuiz() {
 }
 
 renderStep();
-
-// Iframe resize messaging
-function sendHeight() {
-  const h = document.documentElement.scrollHeight;
-  window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
-}
-const ro = new ResizeObserver(sendHeight);
-ro.observe(document.body);
-window.addEventListener('load', sendHeight);
 </script>
 </body>
 </html>

@@ -21,52 +21,50 @@
   <button class="btn btn-primary" id="btnNext">Dál</button>
 </div>
 
+<script src="exercises.js"></script>
 <script>
-(function(){
-  var steps = [
-    { title: 'Krok 1: Počáteční stav DKA', body: 'Počátečním stavem DKA je množina obsahující počáteční stav NKA.\n\n{q\u2080}' },
-    { title: 'Krok 2: Přechody z {q\u2080}', body: 'Z množiny {q\u2080} počítáme přechody:\n\n\u03B4\u2019({q\u2080}, a) = {q\u2080, q\u2081}\n\u03B4\u2019({q\u2080}, b) = \u2205\n\nNový stav: {q\u2080, q\u2081}' },
-    { title: 'Krok 3: Přechody z {q\u2080, q\u2081}', body: 'Z množiny {q\u2080, q\u2081} počítáme přechody:\n\n\u03B4\u2019({q\u2080, q\u2081}, a) = {q\u2080, q\u2081}\n\u03B4\u2019({q\u2080, q\u2081}, b) = {q\u2082}\n\nNový stav: {q\u2082}' },
-    { title: 'Krok 4: Přechody z {q\u2082}', body: 'Z množiny {q\u2082} počítáme přechody:\n\n\u03B4\u2019({q\u2082}, a) = \u2205\n\u03B4\u2019({q\u2082}, b) = \u2205\n\nŽádné nové stavy.' },
-    { title: 'Krok 5: Výsledný DKA', body: 'Vytvořili jsme DKA se stavy:\n\n{q\u2080}, {q\u2080, q\u2081}, {q\u2082}\n\nPřijímajícím stavem je {q\u2082}.' }
-  ];
+// Krokovani determinizace NKA pomoci konstrukce podmnozin
+// Kazdy krok ukazuje jak se pocitaji prechody z mnoziny stavu
 
-  var current = 0;
-  var titleEl = document.getElementById('stepTitle');
-  var bodyEl = document.getElementById('stepBody');
-  var dotsEl = document.getElementById('dots');
-  var btnBack = document.getElementById('btnBack');
-  var btnNext = document.getElementById('btnNext');
+// Jednotlive kroky konstrukce podmnozin
+var steps = [
+  { title: 'Krok 1: Počáteční stav DKA', body: 'Počátečním stavem DKA je množina obsahující počáteční stav NKA.\n\n{q\u2080}' },
+  { title: 'Krok 2: Přechody z {q\u2080}', body: 'Z množiny {q\u2080} počítáme přechody:\n\n\u03B4\u2019({q\u2080}, a) = {q\u2080, q\u2081}\n\u03B4\u2019({q\u2080}, b) = \u2205\n\nNový stav: {q\u2080, q\u2081}' },
+  { title: 'Krok 3: Přechody z {q\u2080, q\u2081}', body: 'Z množiny {q\u2080, q\u2081} počítáme přechody:\n\n\u03B4\u2019({q\u2080, q\u2081}, a) = {q\u2080, q\u2081}\n\u03B4\u2019({q\u2080, q\u2081}, b) = {q\u2082}\n\nNový stav: {q\u2082}' },
+  { title: 'Krok 4: Přechody z {q\u2082}', body: 'Z množiny {q\u2082} počítáme přechody:\n\n\u03B4\u2019({q\u2082}, a) = \u2205\n\u03B4\u2019({q\u2082}, b) = \u2205\n\nŽádné nové stavy.' },
+  { title: 'Krok 5: Výsledný DKA', body: 'Vytvořili jsme DKA se stavy:\n\n{q\u2080}, {q\u2080, q\u2081}, {q\u2082}\n\nPřijímajícím stavem je {q\u2082}.' }
+];
 
-  function resize() {
-    parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
+var current = 0;
+var titleEl = $('stepTitle');
+var bodyEl = $('stepBody');
+var dotsEl = $('dots');
+var btnBack = $('btnBack');
+var btnNext = $('btnNext');
+
+// Vytvoreni tecek pro navigaci mezi kroky
+for (var i = 0; i < steps.length; i++) {
+  var d = el('div', { cls: 'dot' });
+  dotsEl.appendChild(d);
+}
+
+// Zobrazeni aktualniho kroku a aktualizace navigace
+function render() {
+  titleEl.textContent = steps[current].title;
+  bodyEl.textContent = steps[current].body;
+  btnBack.disabled = current === 0;
+  btnNext.disabled = current === steps.length - 1;
+  var dots = dotsEl.children;
+  for (var i = 0; i < dots.length; i++) {
+    dots[i].className = i === current ? 'dot active' : 'dot';
   }
+  notifyResize();
+}
 
-  // build dots
-  for (var i = 0; i < steps.length; i++) {
-    var d = document.createElement('div');
-    d.className = 'dot';
-    dotsEl.appendChild(d);
-  }
+btnBack.addEventListener('click', function() { if (current > 0) { current--; render(); } });
+btnNext.addEventListener('click', function() { if (current < steps.length - 1) { current++; render(); } });
 
-  function render() {
-    titleEl.textContent = steps[current].title;
-    bodyEl.textContent = steps[current].body;
-    btnBack.disabled = current === 0;
-    btnNext.disabled = current === steps.length - 1;
-    var dots = dotsEl.children;
-    for (var i = 0; i < dots.length; i++) {
-      dots[i].className = i === current ? 'dot active' : 'dot';
-    }
-    resize();
-  }
-
-  btnBack.addEventListener('click', function() { if (current > 0) { current--; render(); } });
-  btnNext.addEventListener('click', function() { if (current < steps.length - 1) { current++; render(); } });
-
-  render();
-  window.addEventListener('load', resize);
-})();
+render();
 </script>
 </body>
 </html>

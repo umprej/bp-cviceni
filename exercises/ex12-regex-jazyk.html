@@ -45,7 +45,11 @@
 
 <div id="feedback" class="feedback"></div>
 
+<script src="exercises.js"></script>
 <script>
+// Prirazovani regularnich vyrazu k jejich jazykovym popisum (drag & drop)
+// Uzivatel pretahuje regexy ze zdrojoveho poolu do cilovych zon
+
 var dragVal = null;
 
 document.querySelectorAll('.drag-item').forEach(function(item) {
@@ -63,29 +67,27 @@ document.querySelectorAll('.drop-zone').forEach(function(zone) {
     zone.classList.remove('over');
     var val = e.dataTransfer.getData('text/plain');
     if (!val) return;
-    // remove existing placed item in this zone
+    // Kdyz uz v zone neco je, vratit zpet do poolu
     var old = zone.querySelector('.placed');
-    if (old) returnToPool(old.getAttribute('data-val'));
-    if (old) old.remove();
-    // remove from other zones if placed elsewhere
+    if (old) { returnToPool(old.getAttribute('data-val')); old.remove(); }
+    // Odebrat z jine zony, pokud uz tam byl umisteny
     document.querySelectorAll('.drop-zone .placed').forEach(function(p) {
       if (p.getAttribute('data-val') === val) { returnToPool(val); p.remove(); }
     });
     // hide from pool
     hideFromPool(val);
     // create placed element
-    var el = document.createElement('div');
-    el.className = 'placed';
-    el.setAttribute('data-val', val);
-    el.innerHTML = val.replace(/</g,'&lt;') + ' <span class="remove" title="Odebrat">&times;</span>';
-    el.querySelector('.remove').addEventListener('click', function() {
+    var placed = el('div', { cls: 'placed', attrs: { 'data-val': val } });
+    placed.innerHTML = val.replace(/</g,'&lt;') + ' <span class="remove" title="Odebrat">&times;</span>';
+    placed.querySelector('.remove').addEventListener('click', function() {
       returnToPool(val);
-      el.remove();
+      placed.remove();
     });
-    zone.appendChild(el);
+    zone.appendChild(placed);
   });
 });
 
+// Skryti/zobrazeni polozky v poolu po pretazeni
 function hideFromPool(val) {
   document.querySelectorAll('#sourcePool .drag-item').forEach(function(d) {
     if (d.getAttribute('data-val') === val) d.style.display = 'none';
@@ -97,6 +99,7 @@ function returnToPool(val) {
   });
 }
 
+// Kontrola spravnosti prirazeni - porovna data-val s data-expect
 function checkAnswers() {
   var score = 0;
   var total = 4;
@@ -111,7 +114,7 @@ function checkAnswers() {
       zone.classList.add('zone-incorrect');
     }
   });
-  var fb = document.getElementById('feedback');
+  var fb = $('feedback');
   if (score === total) {
     fb.className = 'feedback correct';
     fb.textContent = 'Výborně! Všechny odpovědi jsou správné.';
@@ -125,19 +128,10 @@ function resetAll() {
   document.querySelectorAll('.drop-zone .placed').forEach(function(p) { p.remove(); });
   document.querySelectorAll('.drop-zone').forEach(function(z) { z.classList.remove('zone-correct','zone-incorrect'); });
   document.querySelectorAll('#sourcePool .drag-item').forEach(function(d) { d.style.display = ''; });
-  var fb = document.getElementById('feedback');
+  var fb = $('feedback');
   fb.className = 'feedback';
   fb.style.display = 'none';
 }
-
-/* iframe resize messaging */
-function sendHeight() {
-  var h = document.documentElement.scrollHeight;
-  window.parent.postMessage({ type: 'iframeResize', height: h }, '*');
-}
-var ro = new ResizeObserver(sendHeight);
-ro.observe(document.body);
-window.addEventListener('load', sendHeight);
 </script>
 </body>
 </html>

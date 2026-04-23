@@ -62,37 +62,39 @@
 
 <div id="verdictContainer"></div>
 
+<script src="exercises.js"></script>
 <script>
+// Simulator deterministickeho konecneho automatu (DKA/DFA)
+// Prijima slova nad {a,b} obsahujici podretezec "ab"
 (function(){
-  const delta = {
+  // prechodova funkce delta(stav, symbol) -> novy stav
+  var delta = {
     'q0': { 'a': 'q1', 'b': 'q0' },
     'q1': { 'a': 'q1', 'b': 'q2' },
     'q2': { 'a': 'q2', 'b': 'q2' }
   };
-  const accepting = new Set(['q2']);
-  const stateLabels = { 'q0': 'q\u2080', 'q1': 'q\u2081', 'q2': 'q\u2082' };
+  var accepting = { 'q2': true }; // prijimajici stavy
+  var stateLabels = { 'q0': 'q\u2080', 'q1': 'q\u2081', 'q2': 'q\u2082' };
 
-  let word = '', pos = 0, currentState = 'q0', running = false;
+  var word = '', pos = 0, currentState = 'q0', running = false;
 
-  const wordInput = document.getElementById('wordInput');
-  const tapeContainer = document.getElementById('tapeContainer');
-  const log = document.getElementById('log');
-  const verdictContainer = document.getElementById('verdictContainer');
-  const errorMsg = document.getElementById('errorMsg');
-  const btnStep = document.getElementById('btnStep');
-  const btnRunAll = document.getElementById('btnRunAll');
-  const btnReset = document.getElementById('btnReset');
+  var wordInput = $('wordInput');
+  var tapeContainer = $('tapeContainer');
+  var log = $('log');
+  var verdictContainer = $('verdictContainer');
+  var errorMsg = $('errorMsg');
+  var btnStep = $('btnStep');
+  var btnRunAll = $('btnRunAll');
+  var btnReset = $('btnReset');
 
-  function resize() {
-    parent.postMessage({ type: 'iframeResize', height: document.documentElement.scrollHeight }, '*');
-  }
-
+  // Zvyrazni aktualni stav v diagramu (oranzova)
   function highlightState(s) {
-    ['cq0','cq1','cq2'].forEach(id => {
-      document.getElementById(id).setAttribute('fill', id === 'c' + s ? '#ffe0b2' : '#fff');
+    ['cq0','cq1','cq2'].forEach(function(id) {
+      $(id).setAttribute('fill', id === 'c' + s ? '#ffe0b2' : '#fff');
     });
   }
 
+  // Validace vstupu - jen a a b, max 20 znaku
   function validate(w) {
     if (w.length === 0) return 'Zadejte alespoň jeden symbol.';
     if (w.length > 20) return 'Maximální délka je 20 znaků.';
@@ -100,29 +102,29 @@
     return '';
   }
 
+  // Sestavi pasku se symboly slova
   function buildTape() {
     tapeContainer.innerHTML = '';
-    for (let i = 0; i < word.length; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'tape-cell';
-      cell.textContent = word[i];
-      cell.id = 'tc' + i;
+    for (var i = 0; i < word.length; i++) {
+      var cell = el('div', { cls: 'tape-cell', text: word[i], attrs: { id: 'tc' + i } });
       tapeContainer.appendChild(cell);
     }
   }
 
+  // Aktualizuje barvy bunek - zpracovane, aktivni, cekajici
   function updateTape() {
-    for (let i = 0; i < word.length; i++) {
-      const cell = document.getElementById('tc' + i);
+    for (var i = 0; i < word.length; i++) {
+      var cell = $('tc' + i);
       if (i < pos) cell.className = 'tape-cell done';
       else if (i === pos) cell.className = 'tape-cell active';
       else cell.className = 'tape-cell';
     }
   }
 
+  // Inicializace simulace - validace a nastaveni pocatecniho stavu
   function init() {
-    const w = wordInput.value.trim();
-    const err = validate(w);
+    var w = wordInput.value.trim();
+    var err = validate(w);
     errorMsg.textContent = err;
     if (err) return false;
     word = w;
@@ -137,49 +139,53 @@
     btnStep.disabled = false;
     btnRunAll.disabled = false;
     wordInput.disabled = true;
-    resize();
+    notifyResize();
     return true;
   }
 
+  // Jeden krok simulace - precte symbol, aplikuje delta, posune se
   function step() {
     if (pos >= word.length) { finish(); return; }
-    const sym = word[pos];
-    const prev = currentState;
-    currentState = delta[prev][sym];
+    var sym = word[pos];
+    var prev = currentState;
+    currentState = delta[prev][sym]; // prechod do dalsiho stavu
     pos++;
-    const entry = document.createElement('div');
-    entry.className = 'log-entry';
-    entry.textContent = '\u03B4(' + stateLabels[prev] + ', ' + sym + ') = ' + stateLabels[currentState];
+    // zalogovat prechod
+    var entry = el('div', { cls: 'log-entry', text: '\u03B4(' + stateLabels[prev] + ', ' + sym + ') = ' + stateLabels[currentState] });
     log.appendChild(entry);
     log.scrollTop = log.scrollHeight;
     updateTape();
     highlightState(currentState);
     if (pos >= word.length) finish();
-    resize();
+    notifyResize();
   }
 
+  // Konec simulace - urcit jestli automat slovo prijal nebo zamitl
   function finish() {
     running = false;
     btnStep.disabled = true;
     btnRunAll.disabled = true;
-    const acc = accepting.has(currentState);
+    var acc = accepting[currentState];
     verdictContainer.innerHTML = '<div class="verdict ' + (acc ? 'accept' : 'reject') + '">' +
       (acc ? 'Slovo "' + word + '" je <strong>přijato</strong> (koncový stav ' + stateLabels[currentState] + ').'
            : 'Slovo "' + word + '" je <strong>zamítnuto</strong> (stav ' + stateLabels[currentState] + ' není přijímající).') +
       '</div>';
-    resize();
+    notifyResize();
   }
 
+  // Dalsi krok - pokud simulace jeste nebezi, inicializovat
   btnStep.addEventListener('click', function() {
     if (!running && !init()) return;
     step();
   });
 
+  // Spustit vsechny kroky najednou
   btnRunAll.addEventListener('click', function() {
     if (!running && !init()) return;
     while (pos < word.length) step();
   });
 
+  // Reset - vsechno zpet do puvodniho stavu
   btnReset.addEventListener('click', function() {
     running = false;
     wordInput.disabled = false;
@@ -190,12 +196,8 @@
     tapeContainer.innerHTML = '';
     errorMsg.textContent = '';
     highlightState('');
-    resize();
+    notifyResize();
   });
-
-  // initial sizing
-  window.addEventListener('load', resize);
-  new MutationObserver(resize).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
 </body>
