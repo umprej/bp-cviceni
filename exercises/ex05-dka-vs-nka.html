@@ -11,8 +11,8 @@
 </style>
 </head>
 <body>
-<h2>Cvičení: NKA — vizualizace paralelních výpočtů</h2>
-<p class="desc">Pozorujte, jak nedeterministický automat zpracovává slovo — výpočet se větví do paralelních cest. Stačí, aby <strong>jedna</strong> větev skončila v koncovém stavu.</p>
+<h2>Cvičení: Vizualizace paralelních výpočtů NKA</h2>
+<p class="desc">Pozorujte, jak nedeterministický automat zpracovává slovo. Výpočet se větví do paralelních cest. Stačí, aby <strong>jedna</strong> větev skončila v koncovém stavu.</p>
 
 <div class="section">
   <h3>NKA přijímající slova končící na „ab"</h3>
@@ -85,7 +85,7 @@
 
 <div class="explanation">
   <strong>Klíčový rozdíl DKA vs. NKA:</strong> V DKA existuje pro každý vstup právě jedna cesta.
-  V NKA se výpočet větví — automat „hádá" správnou cestu. Slovo je přijato, pokud <em>alespoň jedna</em> větev skončí v koncovém stavu.
+  V NKA se výpočet větví a automat „hádá" správnou cestu. Slovo je přijato, pokud <em>alespoň jedna</em> větev skončí v koncovém stavu.
 </div>
 
 <script src="exercises.js"></script>
@@ -170,10 +170,10 @@ function finish() {
   var vEl = $('verdict');
   if (accepted) {
     vEl.innerHTML = '<div class="verdict accept">\u2713 Slovo \u201e' + word +
-      '\u201c je PŘIJATO \u2014 existuje výpočetní větev končící v koncovém stavu q\u2082.</div>';
+      '\u201c je PŘIJATO! existuje výpočetní větev končící v koncovém stavu q\u2082.</div>';
   } else {
     vEl.innerHTML = '<div class="verdict reject">\u2717 Slovo \u201e' + word +
-      '\u201c je ODMÍTNUTO \u2014 žádná větev nekončí v koncovém stavu.</div>';
+      '\u201c je ODMÍTNUTO. Žádná větev nekončí v koncovém stavu.</div>';
   }
 }
 
@@ -215,11 +215,18 @@ function renderTree() {
     } else {
       var isLast = (i === step);
       // Obarveni vetvi - zelena pro prijimajici, cervena pro mrtve, modra pro aktivni
+      // Vetev je mrtva i v mezikoroku, pokud nema nasledniky pro dalsi symbol
       states.forEach(function(s) {
         var cls = 'branch';
         if (isLast && isFinal && accepting[s]) cls += ' accept';
         else if (isLast && isFinal && !accepting[s]) cls += ' dead';
-        else cls += ' alive';
+        else if (!isLast && i < word.length) {
+          // Mezikrok: zjisti jestli stav mel nasledniky pro dalsi symbol
+          var nextSym = word[i];
+          var nexts = delta[s] && delta[s][nextSym] ? delta[s][nextSym] : [];
+          if (nexts.length === 0) cls += ' dead';
+          else cls += ' alive';
+        } else cls += ' alive';
         html += '<div class="' + cls + '">' + labels[s] + '</div>';
       });
     }
