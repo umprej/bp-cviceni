@@ -1,7 +1,7 @@
 /*
  * exercises.css
- * Sdileny stylesheet pro vsechna interaktivni cviceni
- * Pouziva se ve vsech ex01-ex14 HTML souborech
+ * Sdileny stylesheet pro interaktivni cviceni
+ * Pouziva se v ex02, ex04, ex05, ex07, ex08, ex13, ex14
  */
 
 /* Reset - aby vsechny prohlizece vypadaly stejne */
@@ -87,27 +87,6 @@ label { display: block; font-weight: 600; margin-bottom: 4px; }
   margin-bottom: 10px;
 }
 
-/* Zpetna vazba - spravne/spatne */
-.feedback {
-  margin-top: 12px;
-  padding: 10px 14px;
-  border-radius: 4px;
-  display: none;
-  border: 1px solid;
-}
-.feedback.correct {
-  display: block;
-  background: #d4edda;
-  border-color: #c3e6cb;
-  color: #155724;
-}
-.feedback.incorrect {
-  display: block;
-  background: #f8d7da;
-  border-color: #f5c6cb;
-  color: #721c24;
-}
-
 /* Verdikt - prijato/zamitnuto (pouziva simulator DKA) */
 .verdict {
   margin-top: 10px;
@@ -167,149 +146,6 @@ label { display: block; font-weight: 600; margin-bottom: 4px; }
 .tape-cell.active { background: #0f6cbf; color: #fff; border-color: #0f6cbf; }
 .tape-cell.done { background: #b3d7ff; border-color: #80b8f0; }
 
-/* Drag & drop - pretahovani prvku */
-.drag-source {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  min-height: 40px;
-  margin-bottom: 16px;
-}
-.drag-item {
-  background: #0f6cbf;
-  color: #fff;
-  padding: 6px 14px;
-  border-radius: 4px;
-  cursor: grab;
-  user-select: none;
-  font-size: 14px;
-  white-space: nowrap;
-}
-.drag-item:active { cursor: grabbing; }
-
-/* Drop zony - kam se prvky pretahuji */
-.drop-zone {
-  border: 2px dashed #aaa;
-  border-radius: 6px;
-  padding: 10px 12px;
-  min-height: 60px;
-  text-align: center;
-  transition: background 0.2s, border-color 0.2s;
-}
-.drop-zone.over { background: #e8f0fe; border-color: #0f6cbf; }
-.drop-zone .label { font-weight: 600; margin-bottom: 6px; color: #555; }
-.drop-zone .placeholder { color: #999; font-style: italic; }
-.drop-zone .placed {
-  display: inline-flex;
-  align-items: center;
-  background: #0f6cbf;
-  color: #fff;
-  padding: 5px 12px;
-  border-radius: 4px;
-  margin-top: 4px;
-  font-size: 14px;
-}
-.placed .remove {
-  margin-left: 8px;
-  cursor: pointer;
-  font-weight: bold;
-}
-.drop-zone.zone-correct { background: #d4edda; border-color: #c3e6cb; }
-.drop-zone.zone-incorrect { background: #f8d7da; border-color: #f5c6cb; }
-.zone-feedback { margin-top: 6px; font-size: 0.9em; font-weight: 600; }
-.zone-feedback.ok { color: #155724; }
-.zone-feedback.bad { color: #721c24; }
-
-/* Razeni - sortable list pro Chomsky hierarchii */
-.sort-list { list-style: none; padding: 0; margin-bottom: 16px; max-width: 420px; }
-.sort-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff;
-  border: 2px solid #ddd;
-  border-radius: 6px;
-  padding: 10px 14px;
-  margin-bottom: 8px;
-  cursor: grab;
-  user-select: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-.sort-item:active { cursor: grabbing; }
-.sort-item.dragging { opacity: 0.5; border-color: #0f6cbf; }
-.sort-item.drag-over { border-color: #0f6cbf; box-shadow: 0 0 0 2px rgba(15, 108, 191, 0.25); }
-.num-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #0f6cbf;
-  color: #fff;
-  font-weight: 700;
-  font-size: 13px;
-  flex-shrink: 0;
-}
-
-/* Stepper - krokovani (pouziva determinizace a derivace) */
-.stepper {
-  background: #fff;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  margin-bottom: 14px;
-}
-.stepper-header {
-  background: #0f6cbf;
-  color: #fff;
-  padding: 10px 16px;
-  font-weight: 600;
-  font-size: 15px;
-}
-.stepper-body {
-  padding: 18px 16px;
-  font-family: monospace;
-  font-size: 14px;
-  white-space: pre-wrap;
-  min-height: 100px;
-}
-.nav-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 14px;
-  margin-bottom: 10px;
-}
-.dots { display: flex; gap: 8px; }
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #ccc;
-  transition: background 0.2s;
-}
-.dot.active { background: #0f6cbf; }
-
-/* Box pro zobrazeni derivace */
-.deriv-box {
-  background: #e7f3fe;
-  border: 2px solid #0f6cbf;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 16px;
-  text-align: center;
-}
-.deriv-formula {
-  font-family: monospace;
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  letter-spacing: 1px;
-}
-.deriv-rule { font-size: 13px; color: #555; }
-.step-counter { font-size: 14px; font-weight: 600; min-width: 50px; text-align: center; }
-
 /* Tabulky */
 table.data {
   border-collapse: collapse;
@@ -323,8 +159,6 @@ table.data td {
   text-align: center;
 }
 table.data th { background: #f0f0f0; font-weight: 600; }
-td.cell-correct { background: #d4edda; }
-td.cell-incorrect { background: #f8d7da; }
 
 /* Zalozky (taby) - Mealy/Moore */
 .tabs { display: flex; gap: 0; margin-bottom: 14px; }
@@ -423,7 +257,6 @@ td.cell-incorrect { background: #f8d7da; }
 .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; }
 .legend-item { display: flex; align-items: center; gap: 4px; }
 .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
-.legend-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid #aaa; }
 
 /* Tlacitka pro vstupni symboly (Mealy/Moore) */
 .sym-btn {
@@ -602,21 +435,6 @@ svg.edges line, svg.edges path { pointer-events: stroke; }
 .light.yellow.active { background: #ffc107; color: #333; border-color: #ffc107; }
 .light.red.active { background: #dc3545; color: #fff; border-color: #dc3545; }
 
-/* Vennuv diagram */
-.venn-container { display: flex; justify-content: center; margin-bottom: 10px; }
-.region { cursor: pointer; transition: opacity 0.2s; }
-.region:hover { opacity: 0.85; }
-.info-panel {
-  margin-top: 16px; padding: 16px 20px;
-  border-radius: 4px; border: 2px solid #ddd;
-  background: #fafafa; min-height: 60px;
-  transition: border-color 0.3s;
-}
-.info-panel.active { border-color: #0f6cbf; }
-.info-title { font-weight: 700; font-size: 1.05em; margin-bottom: 4px; }
-.info-elements { font-size: 1.15em; font-weight: 600; color: #0f6cbf; }
-.info-desc { color: #555; margin-top: 4px; font-size: 0.95em; }
-
 /* Log a historie prechodu */
 .log {
   font-family: monospace;
@@ -634,34 +452,6 @@ svg.edges line, svg.edges path { pointer-events: stroke; }
   min-height: 24px;
 }
 .history-label { font-weight: 600; margin-bottom: 4px; }
-
-/* Dvousloupcovy layout */
-.columns { display: flex; gap: 32px; flex-wrap: wrap; margin-bottom: 16px; }
-.col { flex: 1; min-width: 240px; }
-.col h3 { margin-bottom: 8px; font-size: 15px; }
-
-/* Box gramatiky */
-.grammar-box {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 14px 18px;
-  margin-bottom: 16px;
-  font-family: monospace;
-  font-size: 14px;
-}
-
-/* Kvizova sekce */
-.quiz-section {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 16px 18px;
-  margin-top: 8px;
-}
-.quiz-section h3 { font-size: 15px; margin-bottom: 10px; }
-.quiz-row { display: flex; gap: 8px; margin-bottom: 10px; }
-.quiz-row input[type="text"] { flex: 1; font-family: monospace; }
 
 /* SVG texty */
 svg text {
@@ -686,5 +476,4 @@ svg text {
 
 /* Pomocne tridy */
 .text-center { text-align: center; }
-.sets { margin-bottom: 14px; font-weight: 600; }
 .help-text { font-size: 12px; color: #888; margin-top: 8px; }
