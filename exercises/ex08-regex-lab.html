@@ -33,6 +33,7 @@ ba</textarea>
 <div class="buttons">
   <button class="btn btn-primary" onclick="runTest()">Testovat výraz</button>
   <button class="btn btn-secondary" onclick="resetAll()">Resetovat</button>
+  <button class="btn btn-secondary" id="toggleGenBtn" onclick="toggleGenWords()" style="display:none;">Skrýt generovaná slova</button>
 </div>
 
 <div id="genSection">
@@ -120,6 +121,8 @@ function runTest() {
     resultList.appendChild(div);
   }
   $('results').style.display = 'block';
+  $('toggleGenBtn').style.display = 'inline-block'; // Show toggle button
+
 }
 
 // Reset na vychozi hodnoty
@@ -130,6 +133,21 @@ function resetAll() {
   $('genSection').style.display = 'none';
   $('results').style.display = 'none';
 }
+
+function toggleGenWords() {
+  var genSection = $('genSection');
+  var toggleBtn = $('toggleGenBtn');
+  
+  if (genSection.style.display === 'none') {
+    genSection.style.display = 'block';
+    toggleBtn.textContent = 'Skrýt generovaná slova';
+  } else {
+    genSection.style.display = 'none';
+    toggleBtn.textContent = 'Zobrazit generovaná slova';
+  }
+}
+
+
 </script>
 </body>
 </html>
