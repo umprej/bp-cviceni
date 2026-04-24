@@ -37,7 +37,7 @@ var states = [
   { id: 'red', label: 'Červená' }
 ];
 var current = 0;
-var history = ['Zelená'];
+var hist = ['Zelená'];
 
 // Aktualizace zobrazeni svetel a historie prechodu
 function render() {
@@ -49,19 +49,19 @@ function render() {
       light.className = 'light ' + s.id + ' inactive';
     }
   });
-  $('historyText').textContent = history.join(' \u2192 ');
+  $('historyText').textContent = hist.join(' \u2192 ');
 }
 
 // Prechod do dalsiho stavu (modulo 3 = cyklicky)
 function advance() {
   current = (current + 1) % 3;
-  history.push(states[current].label);
+  hist.push(states[current].label);
   render();
 }
 
 function resetAll() {
   current = 0;
-  history = ['Zelená'];
+  hist = ['Zelená'];
   render();
 }
 </script>
