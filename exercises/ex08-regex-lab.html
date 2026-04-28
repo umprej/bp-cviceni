@@ -33,11 +33,12 @@ ba</textarea>
 <div class="buttons">
   <button class="btn btn-primary" onclick="runTest()">Testovat výraz</button>
   <button class="btn btn-secondary" onclick="resetAll()">Resetovat</button>
-  <button class="btn btn-secondary" id="toggleGenBtn" onclick="toggleGenWords()" style="display:none;">Skrýt generovaná slova</button>
 </div>
 
 <div id="genSection">
-  <h3>Generovaná slova délky 0–5</h3>
+  <h3>Generovaná slova délky 0–5
+    <button class="btn btn-secondary btn-sm" id="toggleGenBtn" onclick="toggleGen()" style="margin-left:10px;">Skrýt</button>
+  </h3>
   <div class="badge-container" id="genWords"></div>
 </div>
 
@@ -121,8 +122,20 @@ function runTest() {
     resultList.appendChild(div);
   }
   $('results').style.display = 'block';
-  $('toggleGenBtn').style.display = 'inline-block'; // Show toggle button
+}
 
+// Prepinani viditelnosti generovanych slov
+function toggleGen() {
+  var container = $('genWords');
+  var btn = $('toggleGenBtn');
+  if (container.style.display === 'none') {
+    container.style.display = 'flex';
+    btn.textContent = 'Skrýt';
+  } else {
+    container.style.display = 'none';
+    btn.textContent = 'Zobrazit';
+  }
+  notifyResize();
 }
 
 // Reset na vychozi hodnoty
@@ -133,21 +146,6 @@ function resetAll() {
   $('genSection').style.display = 'none';
   $('results').style.display = 'none';
 }
-
-function toggleGenWords() {
-  var genSection = $('genSection');
-  var toggleBtn = $('toggleGenBtn');
-  
-  if (genSection.style.display === 'none') {
-    genSection.style.display = 'block';
-    toggleBtn.textContent = 'Skrýt generovaná slova';
-  } else {
-    genSection.style.display = 'none';
-    toggleBtn.textContent = 'Zobrazit generovaná slova';
-  }
-}
-
-
 </script>
 </body>
 </html>
